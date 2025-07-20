@@ -18,7 +18,7 @@
 
 1. **Build release version using**
 ```
-flutter flutter build apk --release
+flutter build apk --release
 ```
 2. **Find release build in**
 ```
@@ -39,5 +39,5 @@ You can install this APK on any Android device.
 ```
 
 **Wanna know more?**
-Find a comprehensive report about our project [here](CSE327_Koe_report1)
+Find a comprehensive report about our project [here](CSE327_Koe_report1.pdf).
 ---
