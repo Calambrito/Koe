@@ -37,4 +37,7 @@ You can install this APK on any Android device.
 • Sakibul Samir Rafi  (2232080642)
 • Omar Ahmed Sakib    (2022006042)
 ```
+
+**Wanna know more?**
+Find a comprehensive report about our project [here](CSE327_Koe_report1).
 ---
