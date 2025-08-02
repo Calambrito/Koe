@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'database_helper.dart';
+import 'player_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -11,78 +12,56 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Audio Player Demo',
-      home: AudioPlayerScreen(),
+      title: 'Music Player',
+      home: const SongListScreen(),
     );
   }
 }
 
-class AudioPlayerScreen extends StatefulWidget {
-  const AudioPlayerScreen({super.key});
+class SongListScreen extends StatefulWidget {
+  const SongListScreen({super.key});
 
   @override
-  _AudioPlayerScreenState createState() => _AudioPlayerScreenState();
+  _SongListScreenState createState() => _SongListScreenState();
 }
 
-class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
-  final AudioPlayer _player = AudioPlayer();
-  bool _isPlaying = false;
+class _SongListScreenState extends State<SongListScreen> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Map<String, dynamic>> _songs = [];
 
   @override
   void initState() {
     super.initState();
-
-    // Load your audio source (replace with your URL or asset)
-    _player.setUrl(
-      'https://happysoulmusic.com/wp-content/grand-media/audio/As_You_Fade_Away_-_NEFFEX.mp3',
-    );
-
-    // Listen to player state changes
-    _player.playerStateStream.listen((playerState) {
-      final playing = playerState.playing;
-      final processingState = playerState.processingState;
-
-      // Update UI only if needed
-      if (playing != _isPlaying) {
-        setState(() {
-          _isPlaying = playing;
-        });
-      }
-
-      // If playback finished, reset button to 'play'
-      if (processingState == ProcessingState.completed) {
-        _player.seek(Duration.zero);
-        _player.pause();
-      }
-    });
+    _loadSongs();
   }
 
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  void _togglePlayPause() async {
-    if (_isPlaying) {
-      await _player.pause();
-      // UI will update via listener
-    } else {
-      await _player.play();
-      // UI will update via listener
-    }
+  Future<void> _loadSongs() async {
+    final songs = await _dbHelper.getSongs();
+    setState(() => _songs = songs);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Audio Player Demo')),
-      body: Center(
-        child: IconButton(
-          iconSize: 64,
-          icon: Icon(_isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill),
-          onPressed: _togglePlayPause,
-        ),
+      appBar: AppBar(title: const Text('Songs')),
+      body: ListView.builder(
+        itemCount: _songs.length,
+        itemBuilder: (context, index) {
+          final song = _songs[index];
+          return ListTile(
+            title: Text(song['name']),
+            subtitle: Text(song['url']),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PlayerScreen(
+                  songUrl: song['url'],
+                  songName: song['name'],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
