@@ -16,21 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Koe'),
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Color(
-                    0xFFB3A3BA,
-                  ), // Purple color matching your background
-                  width: 2.0, // Thickness of the line
-                ),
-              ),
-            ),
-          ),
-        ),
+        appBar: AppBar(title: const Text('Koe')),
         body: const SizedBox(
           width: double.infinity,
           child: Column(
