@@ -1,5 +1,5 @@
 import 'audio_player_manager.dart';
-
+import 'database_helper.dart';
 class Song {
   final String songId;
   final String songName;
@@ -7,8 +7,7 @@ class Song {
   final String? duration;
   final String? genre;
   final String? artistId;
-
-  // Constructor
+  static final dbHelper = DatabaseHelper.getInstance();
   Song({
     required this.songId,
     required this.songName,
@@ -18,7 +17,6 @@ class Song {
     this.artistId,
   });
 
-  // Alternative constructor from database map
   Song.fromMap(Map<String, dynamic> map) :
     songId = map['song_id'] as String,
     songName = map['song_name'] as String,
@@ -27,7 +25,6 @@ class Song {
     genre = map['genre'] as String?,
     artistId = map['artist_id'] as String?;
 
-  // Convert to map for database operations
   Map<String, dynamic> toMap() {
     return {
       'song_id': songId,
@@ -39,7 +36,14 @@ class Song {
     };
   }
 
-  // Playback control methods
+  Future<List<Map<String, dynamic>>> getSongs() async {
+    final db = await dbHelper.database;
+    return await db.query(
+      'Songs',
+      orderBy: 'song_name ASC',
+    );
+  }
+
   Future<void> play() async {
     try {
       await AudioPlayerManager.instance.setUrl(url);
@@ -56,5 +60,4 @@ class Song {
   Future<void> stop() async {
     await AudioPlayerManager.instance.player.stop();
   }
-
 }
