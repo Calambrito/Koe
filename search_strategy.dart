@@ -1,3 +1,7 @@
+import 'song.dart';
+
 abstract class SongSearchStrategy {
-  Future<List<Map<String, dynamic>>> search(String query);
+  Future<List<Song>> search(String query);
 }
+
+

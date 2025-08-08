@@ -1,3 +1,24 @@
+import 'search_strategy.dart';
+import 'database_helper.dart';
+import 'song.dart';
+
+class GenreSearchStrategy implements SongSearchStrategy {
+  final DatabaseHelper dbHelper = DatabaseHelper.getInstance();
+
+  @override
+  Future<List<Song>> search(String query) async {
+    final db = await dbHelper.database;
+    final results = await db.rawQuery('''
+      SELECT Songs.*, Artist.artist_name
+      FROM Songs
+      JOIN Artist ON Songs.artist_id = Artist.artist_id
+      WHERE Songs.genre LIKE ?
+    ''', ['%$query%']);
+
+    return results.map((map) => Song.fromMap(map)).toList();
+  }
+}
+
 /*import 'search_strategy.dart';
 import 'database_helper.dart';
 class GenreSearchStrategy implements SongSearchStrategy {
@@ -13,9 +34,9 @@ class GenreSearchStrategy implements SongSearchStrategy {
     );
   }
 }*/
-import 'search_strategy.dart';
+/*import 'search_strategy.dart';
 import 'database_helper.dart';
-
+import 'song.dart';
 class GenreSearchStrategy implements SongSearchStrategy {
   final DatabaseHelper dbHelper = DatabaseHelper.getInstance();
 
@@ -30,3 +51,4 @@ class GenreSearchStrategy implements SongSearchStrategy {
     ''', ['%$query%']);
   }
 }
+*/
