@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:koe/pages/view_as_user_usernamecheck.dart';
 import 'login_page.dart';
 import '../backend/admin.dart';
 import '../backend/theme.dart';
@@ -175,6 +176,16 @@ class _AdminPageState extends State<AdminPage> {
                 child: _isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Add Song'),
+              ),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ViewAsUserUsernameCheck()),
+                  );
+                },
+                child: const Text('View as User'),
               ),
             ],
           ),
