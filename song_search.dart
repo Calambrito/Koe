@@ -1,18 +1,4 @@
-/*import 'search_strategy.dart';
-import 'database_helper.dart';
-class SongNameSearchStrategy implements SongSearchStrategy {
-  final DatabaseHelper dbHelper = DatabaseHelper.getInstance();
 
-  @override
-  Future<List<Map<String, dynamic>>> search(String query) async {
-    final db = await dbHelper.database;
-    return await db.query(
-      'Songs',
-      where: 'song_name LIKE ?',
-      whereArgs: ['%$query%'],
-    );
-  }
-}*/
 import 'search_strategy.dart';
 import 'database_helper.dart';
 
@@ -30,3 +16,4 @@ class SongNameSearchStrategy implements SongSearchStrategy {
     ''', ['%$query%']);
   }
 }
+
