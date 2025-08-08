@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:koe/pages/view_as_user_usernamecheck.dart';
 import 'login_page.dart';
 import '../backend/admin.dart';
 import '../backend/theme.dart';
@@ -60,7 +61,9 @@ class _AdminPageState extends State<AdminPage> {
       await admin.addSong(
         songName: _songNameController.text,
         url: _urlController.text,
-        duration: _durationController.text.isEmpty ? null : _durationController.text,
+        duration: _durationController.text.isEmpty
+            ? null
+            : _durationController.text,
         genre: _genreController.text.isEmpty ? null : _genreController.text,
         artistName: _artistController.text,
       );
@@ -108,6 +111,7 @@ class _AdminPageState extends State<AdminPage> {
                 'Add New Song',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
+
               TextFormField(
                 controller: _songNameController,
                 decoration: const InputDecoration(labelText: 'Song Name*'),
@@ -120,7 +124,9 @@ class _AdminPageState extends State<AdminPage> {
               ),
               TextFormField(
                 controller: _durationController,
-                decoration: const InputDecoration(labelText: 'Duration (HH:MM:SS)'),
+                decoration: const InputDecoration(
+                  labelText: 'Duration (HH:MM:SS)',
+                ),
               ),
               TextFormField(
                 controller: _genreController,
@@ -132,42 +138,49 @@ class _AdminPageState extends State<AdminPage> {
                   if (textEditingValue.text.isEmpty) {
                     return _artistNames;
                   }
-                  return _artistNames.where((name) => name
-                      .toLowerCase()
-                      .contains(textEditingValue.text.toLowerCase()));
+                  return _artistNames.where(
+                    (name) => name.toLowerCase().contains(
+                      textEditingValue.text.toLowerCase(),
+                    ),
+                  );
                 },
                 onSelected: (selection) {
                   _artistController.text = selection;
                 },
-                fieldViewBuilder: (
-                  context,
-                  textEditingController,
-                  focusNode,
-                  onFieldSubmitted,
-                ) {
-                  textEditingController.text = _artistController.text;
-                  textEditingController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: textEditingController.text.length),
-                  );
-                  textEditingController.addListener(() {
-                    _artistController.text = textEditingController.text;
-                  });
-                  return TextFormField(
-                    controller: textEditingController,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(
-                      labelText: 'Artist Name*',
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Required' : null,
-                  );
-                },
+                fieldViewBuilder:
+                    (
+                      context,
+                      textEditingController,
+                      focusNode,
+                      onFieldSubmitted,
+                    ) {
+                      textEditingController.text = _artistController.text;
+                      textEditingController
+                          .selection = TextSelection.fromPosition(
+                        TextPosition(offset: textEditingController.text.length),
+                      );
+                      textEditingController.addListener(() {
+                        _artistController.text = textEditingController.text;
+                      });
+                      return TextFormField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Artist Name*',
+                        ),
+                        validator: (value) =>
+                            value!.isEmpty ? 'Required' : null,
+                      );
+                    },
               ),
               const SizedBox(height: 20),
               if (_message.isNotEmpty)
                 Text(
                   _message,
                   style: TextStyle(
-                    color: _message.contains('Error') ? Colors.red : Colors.green,
+                    color: _message.contains('Error')
+                        ? Colors.red
+                        : Colors.green,
                   ),
                 ),
               ElevatedButton(
@@ -175,6 +188,22 @@ class _AdminPageState extends State<AdminPage> {
                 child: _isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Add Song'),
+              ),
+
+              // ViewAsUser button
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViewAsUserUsernameCheck(),
+                      ),
+                    );
+                  },
+                  child: const Text('View as User'),
+                ),
               ),
             ],
           ),

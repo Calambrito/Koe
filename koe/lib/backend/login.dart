@@ -25,14 +25,14 @@ class LoginManager {
     }
 
     final userId = await idGen.generateNextUserId();
-    
+
     await db.insert('User', {
       'user_id': userId,
       'user_name': userName.toLowerCase(),
       'password': password,
-      'is_admin': 0
+      'is_admin': 0,
     });
-    
+
     return userId;
   }
 
@@ -41,18 +41,10 @@ class LoginManager {
     final db = await dbHelper.database;
 
     // Delete user's subscriptions
-    await db.delete(
-      'Subscription',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    await db.delete('Subscription', where: 'user_id = ?', whereArgs: [userId]);
 
     // Delete user's notifications
-    await db.delete(
-      'Notification',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    await db.delete('Notification', where: 'user_id = ?', whereArgs: [userId]);
 
     // Get user's playlists
     final playlists = await db.query(
@@ -73,25 +65,14 @@ class LoginManager {
     }
 
     // Delete user's playlists
-    await db.delete(
-      'Playlist',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    await db.delete('Playlist', where: 'user_id = ?', whereArgs: [userId]);
 
     // Finally delete the user
-    await db.delete(
-      'User',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    await db.delete('User', where: 'user_id = ?', whereArgs: [userId]);
   }
 
   // Authenticate user credentials
-  static Future<String?> authenticate(
-    String username, 
-    String password
-  ) async {
+  static Future<String?> authenticate(String username, String password) async {
     final db = await dbHelper.database;
     final result = await db.query(
       'User',
@@ -114,7 +95,20 @@ class LoginManager {
       whereArgs: [userId],
       limit: 1,
     );
-    
+
     return result.isNotEmpty && result.first['is_admin'] == 1;
+  }
+
+  // Returns true to view_as_user_usernamecheck if a user with the given userName exists
+  static Future<bool> userExists(String userName) async {
+    final db = await dbHelper.database;
+    final result = await db.query(
+      'User',
+      columns: ['user_id'],
+      where: 'user_name = ?',
+      whereArgs: [userName.toLowerCase()],
+      limit: 1,
+    );
+    return result.isNotEmpty;
   }
 }
