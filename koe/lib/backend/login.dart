@@ -117,17 +117,4 @@ class LoginManager {
     
     return result.isNotEmpty && result.first['is_admin'] == 1;
   }
-
-  // returns true to view_as_user_usernamecheck if a user with the given userName exists
-  static Future<bool> userExists(String userName) async {
-    final db = await dbHelper.database;
-    final result = await db.query(
-      'User',
-      columns: ['user_id'],
-      where: 'user_name = ?',
-      whereArgs: [userName.toLowerCase()],
-      limit: 1,
-    );
-    return result.isNotEmpty;
-  }
 }
