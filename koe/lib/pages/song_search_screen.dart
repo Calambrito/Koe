@@ -1,117 +1,3 @@
-/*import 'package:flutter/material.dart';
-import '../backend/user.dart';
-import '../backend/song.dart';
-import '../backend/song_search.dart';
-import '../backend/artist_search.dart';
-import '../backend/genre_search.dart';
-
-class SongSearchScreen extends StatefulWidget {
-  final User user;
-  const SongSearchScreen({super.key, required this.user});
-
-  @override
-  State<SongSearchScreen> createState() => _SongSearchScreenState();
-}
-
-class _SongSearchScreenState extends State<SongSearchScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String _searchType = 'Song Name';
-  List<Song> _results = [];
-  bool _isLoading = false;
-
-  Future<void> _performSearch() async {
-    setState(() => _isLoading = true);
-
-    // Set strategy based on dropdown
-    switch (_searchType) {
-      case 'Song Name':
-        widget.user.discover.setStrategy(SongNameSearchStrategy());
-        break;
-      case 'Artist':
-        widget.user.discover.setStrategy(ArtistSearchStrategy());
-        break;
-      case 'Genre':
-        widget.user.discover.setStrategy(GenreSearchStrategy());
-        break;
-    }
-
-   final songsData = await widget.user.discover.search(_controller.text);
-
-// Convert to List<Song> using fromMap
-final songs = songsData
-    .map<Song>((data) => Song.fromMap(data))
-    .toList();
-
-setState(() {
-  _results = songs;
-  _isLoading = false;
-});
-
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Search Songs')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter search term...',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: _searchType,
-                  items: const [
-                    DropdownMenuItem(value: 'Song Name', child: Text('Song Name')),
-                    DropdownMenuItem(value: 'Artist', child: Text('Artist')),
-                    DropdownMenuItem(value: 'Genre', child: Text('Genre')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _searchType = val);
-                  },
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _performSearch,
-                  child: const Text('Search'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _results.isEmpty
-                      ? const Center(child: Text('No results'))
-                      : ListView.builder(
-                          itemCount: _results.length,
-                          itemBuilder: (context, index) {
-                            final song = _results[index];
-                            return ListTile(
-                              title: Text(song.songName),
-                              subtitle: Text(song.songId),
-                              onTap: () {
-                                // Navigate to player or details
-                              },
-                            );
-                          },
-                        ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}*/
 import 'package:flutter/material.dart';
 import '../backend/user.dart';
 import '../backend/song.dart';
@@ -134,32 +20,6 @@ class _SongSearchScreenState extends State<SongSearchScreen> {
   List<Song> _results = [];
   bool _isLoading = false;
 
-  /*Future<void> _performSearch() async {
-    setState(() => _isLoading = true);
-
-    // Set strategy based on dropdown
-    switch (_searchType) {
-      case 'Song Name':
-        widget.user.discover.setStrategy(SongNameSearchStrategy());
-        break;
-      case 'Artist':
-        widget.user.discover.setStrategy(ArtistSearchStrategy());
-        break;
-      case 'Genre':
-        widget.user.discover.setStrategy(GenreSearchStrategy());
-        break;
-    }
-
-    final songsData = await widget.user.discover.search(_controller.text);
-
-    // Convert the List<Map<String, dynamic>> into List<Song>
-    final songs = songsData.map((data) => Song.fromMap(data)).toList();
-
-    setState(() {
-      _results = songs;
-      _isLoading = false;
-    });
-  }*/
   Future<void> _performSearch() async {
   setState(() => _isLoading = true);
 
@@ -178,7 +38,7 @@ class _SongSearchScreenState extends State<SongSearchScreen> {
   final songs = await widget.user.discover.search(_controller.text);
 
   setState(() {
-    _results = songs;  // already List<Song>
+    _results = songs;  
     _isLoading = false;
   });
 }
@@ -234,7 +94,6 @@ class _SongSearchScreenState extends State<SongSearchScreen> {
                             return ListTile(
                               title: Text(song.songName),
                               subtitle: Text(
-                                //'Artist: ${song.artistId ?? "Unknown"} | Genre: ${song.genre ?? "Unknown"}',
                                 'Artist: ${song.artistName ?? "Unknown"} | Genre: ${song.genre ?? "Unknown"}',
                               ),
                               onTap: () {
