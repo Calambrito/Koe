@@ -1,10 +1,4 @@
-/*import 'package:flutter/material.dart';
-import '../backend/database_helper.dart';
-import '../backend/search_strategy.dart';
-import '../backend/search_context.dart';
-import '../backend/artist_search.dart';
-import '../backend/genre_search.dart';
-import '../backend/song_search.dart';*/
+
 import 'package:flutter/material.dart';
 
 import '../backend/database_helper.dart';
@@ -259,4 +253,5 @@ class _SongSearchScreenState extends State<SongSearchScreen> {
       ),
     );
   }
+
 }*/
