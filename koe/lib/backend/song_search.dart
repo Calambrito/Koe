@@ -1,8 +1,9 @@
+
 import 'search_strategy.dart';
 import 'database_helper.dart';
 import 'song.dart';
 
-class ArtistSearchStrategy implements SongSearchStrategy {
+class SongNameSearchStrategy implements SongSearchStrategy {
   final DatabaseHelper dbHelper = DatabaseHelper.getInstance();
 
   @override
@@ -12,10 +13,13 @@ class ArtistSearchStrategy implements SongSearchStrategy {
       SELECT Songs.*, Artist.artist_name
       FROM Songs
       JOIN Artist ON Songs.artist_id = Artist.artist_id
-      WHERE Artist.artist_name LIKE ?
+      WHERE Songs.song_name LIKE ?
     ''', ['%$query%']);
 
     return results.map((map) => Song.fromMap(map)).toList();
   }
 }
+
+
+
 
