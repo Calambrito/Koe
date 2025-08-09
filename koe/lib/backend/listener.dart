@@ -3,7 +3,7 @@ import 'database_helper.dart';
 import 'theme.dart';
 
 class Listener extends User {
-  List<String> playlists;
+  List<int> playlists;
   List<String> notifications;
   static final dbHelper = DatabaseHelper.getInstance();
 
@@ -11,7 +11,7 @@ class Listener extends User {
     required super.userID,
     required super.username,
     required super.theme,
-    List<String>? playlists,
+    List<int>? playlists,
     List<String>? notifications,
   })  : playlists = playlists ?? [],
         notifications = notifications ?? [] {
@@ -20,7 +20,7 @@ class Listener extends User {
   }
 
   // Static method to load user by ID
-  static Future<Listener> loadUserById(String userId) async {
+  static Future<Listener> loadUserById(int userId) async {
     final db = await dbHelper.database;
     final userData = await db.query(
       'User',
@@ -35,7 +35,7 @@ class Listener extends User {
 
     final user = userData.first;
     return Listener(
-      userID: user['user_id'] as String,
+      userID: user['user_id'] as int,
       username: user['user_name'] as String,
       theme: _stringToTheme(user['theme'] as String?),
       playlists: await _loadUserPlaylists(userId),
@@ -51,7 +51,7 @@ class Listener extends User {
     );
   }
 
-  static Future<List<String>> _loadUserPlaylists(String userId) async {
+  static Future<List<int>> _loadUserPlaylists(int userId) async {
     final db = await dbHelper.database;
     final playlistsData = await db.query(
       'Playlist',
@@ -60,11 +60,11 @@ class Listener extends User {
       whereArgs: [userId],
     );
     return playlistsData
-        .map((p) => p['playlist_id'] as String)
+        .map((p) => p['playlist_id'] as int)
         .toList();
   }
 
-  static Future<List<String>> _loadUserNotifications(String userId) async {
+  static Future<List<String>> _loadUserNotifications(int userId) async {
     final db = await dbHelper.database;
     final notificationsData = await db.query(
       'Notification',
@@ -85,14 +85,13 @@ class Listener extends User {
     notifications = await _loadUserNotifications(userID);
   }
 
-  Future<void> createPlaylist(String playlistID, String playlistName) async {
+  Future<void> createPlaylist(String playlistName) async {
     final db = await dbHelper.database;
-    await db.insert('Playlist', {
-      'playlist_id': playlistID,
+    final playlistId = await db.insert('Playlist', {
       'playlist_name': playlistName,
       'user_id': userID,
     });
-    playlists.add(playlistID);
+    playlists.add(playlistId);
   }
 
   Future<void> addNotification(String message) async {
@@ -104,23 +103,23 @@ class Listener extends User {
     notifications.add(message);
   }
 
-  Future<void> deletePlaylist(String playlistID) async {
+  Future<void> deletePlaylist(int playlistId) async {
     final db = await dbHelper.database;
     
     // Delete songs from playlist first
     await db.delete(
       'Playlist_Songs',
       where: 'playlist_id = ?',
-      whereArgs: [playlistID],
+      whereArgs: [playlistId],
     );
     
     // Then delete the playlist
     await db.delete(
       'Playlist',
       where: 'playlist_id = ?',
-      whereArgs: [playlistID],
+      whereArgs: [playlistId],
     );
     
-    playlists.remove(playlistID);
+    playlists.remove(playlistId);
   }
 }

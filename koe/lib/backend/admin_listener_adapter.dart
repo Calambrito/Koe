@@ -1,9 +1,6 @@
-// admin_listener_adapter
-
 import 'listener.dart';
 import 'database_helper.dart';
 import 'theme.dart';
-
 
 class AdminListenerAdapter {
   final Listener _listener;
@@ -11,7 +8,7 @@ class AdminListenerAdapter {
   AdminListenerAdapter._(this._listener);
 
   // loading by user id
-  static Future<AdminListenerAdapter> forUserId(String userId) async {
+  static Future<AdminListenerAdapter> forUserId(int userId) async {
     final listener = await Listener.loadUserById(userId);
     return AdminListenerAdapter._(listener);
   }
@@ -30,25 +27,25 @@ class AdminListenerAdapter {
       throw Exception('User "$userName" not found');
     }
 
-    final userId = rows.first['user_id'] as String;
+    final userId = rows.first['user_id'] as int;
     final listener = await Listener.loadUserById(userId);
     return AdminListenerAdapter._(listener);
   }
 
   // user info
-  String get userID => _listener.userID;
+  int get userID => _listener.userID;
   String get username => _listener.username;
   KoeTheme get theme => _listener.theme;
 
-  List<String> get playlists => _listener.playlists;
+  List<int> get playlists => _listener.playlists;
   List<String> get notifications => _listener.notifications;
 
   // user methods
-  Future<void> userCreatePlaylist(String playlistID, String playlistName) =>
-      _listener.createPlaylist(playlistID, playlistName);
+  Future<void> userCreatePlaylist(String playlistName) =>
+      _listener.createPlaylist(playlistName);
 
-  Future<void> userDeletePlaylist(String playlistID) =>
-      _listener.deletePlaylist(playlistID);
+  Future<void> userDeletePlaylist(int playlistId) =>
+      _listener.deletePlaylist(playlistId);
 
   Future<void> userAddNotification(String message) =>
       _listener.addNotification(message);

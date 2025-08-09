@@ -2,7 +2,7 @@ import 'database_helper.dart';
 import 'song.dart';
 
 class Playlist {
-  final String playlistId;
+  final int playlistId;
   String playlistName;
   List<Song> songs = [];
   static final dbHelper = DatabaseHelper.getInstance();
@@ -19,13 +19,13 @@ class Playlist {
   Future<void> _loadSongs() async {
     final songIds = await playlistToSong(playlistId);
 
-    for (String id in songIds) {
+    for (int id in songIds) {
       final songMap = await dbHelper.idToSong(id);
       songs.add(Song.fromMap(songMap));
     }
   }
 
-  Future<List<String>> playlistToSong(String playlistId) async {
+  Future<List<int>> playlistToSong(int playlistId) async {
     final db = await dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'Playlist_Songs',
@@ -34,7 +34,7 @@ class Playlist {
       whereArgs: [playlistId],
     );
 
-    return List.generate(maps.length, (i) => maps[i]['song_id'] as String);
+    return List.generate(maps.length, (i) => maps[i]['song_id'] as int);
   }
 
   Future<void> addSong(Song song) async {
@@ -57,7 +57,7 @@ class Playlist {
     ));
   }
 
-  Future<String> getPlaylistName(String playlistId) async {
+  Future<String> getPlaylistName(int playlistId) async {
     final db = await dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'Playlist',

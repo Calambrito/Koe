@@ -1,14 +1,12 @@
 import 'user.dart';
 import 'database_helper.dart';
 import 'song.dart';
-import 'generator.dart';
 
 class Admin extends User {
   Admin({required super.userID, required super.username, required super.theme});
-  static final idGen = IdGenerator.getInstance();
   static final dbHelper = DatabaseHelper.getInstance();
   
-  Future<String> addSong({
+  Future<int> addSong({
     required String songName,
     required String url,
     String? duration,
@@ -16,7 +14,6 @@ class Admin extends User {
     required String artistName, 
   }) async {
     final db = await dbHelper.database;
-    
 
     final artistRows = await db.query(
       'Artist',
@@ -25,30 +22,23 @@ class Admin extends User {
       limit: 1,
     );
 
-    String artistId;
+    int artistId;
     if (artistRows.isNotEmpty) {
-      artistId = artistRows.first['artist_id'] as String;
+      artistId = artistRows.first['artist_id'] as int;
     } else {
-     
-      artistId = await idGen.generateNextArtistId();
-      await db.insert('Artist', {
-        'artist_id': artistId,
+      artistId = await db.insert('Artist', {
         'artist_name': artistName,
       });
     }
 
+    final songId = await db.insert('Songs', {
+      'song_name': songName,
+      'url': url,
+      'duration': duration,
+      'genre': genre,
+      'artist_id': artistId,
+    });
     
-    final songId = await idGen.generateNextSongId();
-    final song = Song(
-      songId: songId,
-      songName: songName,
-      url: url,
-      duration: duration,
-      genre: genre,
-      artistId: artistId,
-    );
-
-    await db.insert('Songs', song.toMap());
     return songId;
   }
 

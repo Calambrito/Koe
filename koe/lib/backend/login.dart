@@ -1,19 +1,15 @@
 import 'database_helper.dart';
-import 'generator.dart';
 
 class LoginManager {
   static final dbHelper = DatabaseHelper.getInstance();
-  static final idGen = IdGenerator.getInstance();
 
-  // Add a new user to the database
-  static Future<String> addUser({
+  static Future<int> addUser({
     required String userName,
     required String password,
     bool isAdmin = false,
   }) async {
     final db = await dbHelper.database;
 
-    // Check for existing username
     final existingUser = await db.query(
       'User',
       where: 'user_name = ?',
@@ -23,38 +19,29 @@ class LoginManager {
     if (existingUser.isNotEmpty) {
       throw Exception('Username "$userName" already exists');
     }
-
-    final userId = await idGen.generateNextUserId();
     
-    await db.insert('User', {
-      'user_id': userId,
+    return await db.insert('User', {
       'user_name': userName.toLowerCase(),
       'password': password,
-      'is_admin': 0
+      'is_admin': isAdmin ? 1 : 0
     });
-    
-    return userId;
   }
 
-  // Remove a user from the database
-  static Future<void> removeUser(String userId) async {
+  static Future<void> removeUser(int userId) async {
     final db = await dbHelper.database;
 
-    // Delete user's subscriptions
     await db.delete(
       'Subscription',
       where: 'user_id = ?',
       whereArgs: [userId],
     );
 
-    // Delete user's notifications
     await db.delete(
       'Notification',
       where: 'user_id = ?',
       whereArgs: [userId],
     );
 
-    // Get user's playlists
     final playlists = await db.query(
       'Playlist',
       columns: ['playlist_id'],
@@ -62,9 +49,8 @@ class LoginManager {
       whereArgs: [userId],
     );
 
-    // Delete songs from each playlist
     for (final playlist in playlists) {
-      final playlistId = playlist['playlist_id'] as String;
+      final playlistId = playlist['playlist_id'] as int;
       await db.delete(
         'Playlist_Songs',
         where: 'playlist_id = ?',
@@ -72,14 +58,12 @@ class LoginManager {
       );
     }
 
-    // Delete user's playlists
     await db.delete(
       'Playlist',
       where: 'user_id = ?',
       whereArgs: [userId],
     );
 
-    // Finally delete the user
     await db.delete(
       'User',
       where: 'user_id = ?',
@@ -87,8 +71,7 @@ class LoginManager {
     );
   }
 
-  // Authenticate user credentials
-  static Future<String?> authenticate(
+  static Future<int?> authenticate(
     String username, 
     String password
   ) async {
@@ -101,11 +84,10 @@ class LoginManager {
       limit: 1,
     );
 
-    return result.isNotEmpty ? result.first['user_id'] as String? : null;
+    return result.isNotEmpty ? result.first['user_id'] as int? : null;
   }
 
-  // Check if user is admin
-  static Future<bool> isAdmin(String userId) async {
+  static Future<bool> isAdmin(int userId) async {
     final db = await dbHelper.database;
     final result = await db.query(
       'User',
@@ -118,7 +100,6 @@ class LoginManager {
     return result.isNotEmpty && result.first['is_admin'] == 1;
   }
 
-  // returns true to view_as_user_usernamecheck if a user with the given userName exists
   static Future<bool> userExists(String userName) async {
     final db = await dbHelper.database;
     final result = await db.query(

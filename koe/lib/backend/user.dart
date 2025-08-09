@@ -11,7 +11,7 @@ import 'theme.dart';
 import 'discover.dart';
 
 class User {
-  final String userID;
+  final int userID;
   final String username;
   final KoeTheme theme;
 
