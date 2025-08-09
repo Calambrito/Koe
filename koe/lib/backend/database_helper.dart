@@ -123,6 +123,47 @@ class DatabaseHelper {
       )
     ''');
     
+    await db.insert('Artist', {
+      'artist_id': 'ARTIST1',
+      'artist_name': 'John Doe',
+    });
+
+   
+    await db.insert('Artist', {
+      'artist_id': 'NEFFEX',
+      'artist_name': 'NEFFEX',
+    });
+
+    
+    await db.insert('Songs', {
+      'song_id': 'SONG1',
+      'song_name': 'Sample Song 1',
+      'url': 'https://example.com/song1.mp3',
+      'duration': '3:45',
+      'genre': 'Pop',
+      'artist_id': 'ARTIST1',
+    });
+
+    await db.insert('Songs', {
+      'song_id': 'SONG2',
+      'song_name': 'Another Tune',
+      'url': 'https://example.com/song2.mp3',
+      'duration': '4:10',
+      'genre': 'Rock',
+      'artist_id': 'ARTIST1',
+    });
+
+    
+    await db.insert('Songs', {
+      'song_id': 'SONG5',
+      'song_name': 'As You Fade Away',
+      'url': 'https://happysoulmusic.com/wp-content/grand-media/audio/As_You_Fade_Away_-_NEFFEX.mp3',
+      'duration': '4:16',
+      'genre': 'Pop',
+      'artist_id': 'NEFFEX',  
+    });
+
+
     await db.insert('User', {
       'user_id': 'ADMIN0',
       'user_name': 'cxladmin',
