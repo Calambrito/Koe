@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
-import '../backend/database_helper.dart';
 
 void main() async{
-  WidgetsFlutterBinding.ensureInitialized();
-  final idGen = DatabaseHelper.getInstance();
-  final db = await idGen.database;
   runApp(const MyApp());
 }
 

@@ -1,5 +1,6 @@
 import 'audio_player_manager.dart';
 import 'database_helper.dart';
+
 class Song {
   final String songId;
   final String songName;
@@ -7,7 +8,10 @@ class Song {
   final String? duration;
   final String? genre;
   final String? artistId;
+  final String? artistName; 
+
   static final dbHelper = DatabaseHelper.getInstance();
+
   Song({
     required this.songId,
     required this.songName,
@@ -15,6 +19,7 @@ class Song {
     this.duration,
     this.genre,
     this.artistId,
+    this.artistName,
   });
 
   Song.fromMap(Map<String, dynamic> map) :
@@ -23,7 +28,8 @@ class Song {
     url = map['url'] as String,
     duration = map['duration'] as String?,
     genre = map['genre'] as String?,
-    artistId = map['artist_id'] as String?;
+    artistId = map['artist_id'] as String?,
+    artistName = map['artist_name'] as String?; 
 
   Map<String, dynamic> toMap() {
     return {
@@ -33,6 +39,7 @@ class Song {
       if (duration != null) 'duration': duration,
       if (genre != null) 'genre': genre,
       if (artistId != null) 'artist_id': artistId,
+      if (artistName != null) 'artist_name': artistName, 
     };
   }
 

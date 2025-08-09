@@ -7,13 +7,12 @@ class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
   static final idGen = IdGenerator.getInstance();
-  
+
   DatabaseHelper._internal();
 
   static DatabaseHelper getInstance() {
     return _instance;
   }
-  
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -21,18 +20,41 @@ class DatabaseHelper {
     return _database!;
   }
 
+  
   Future<Database> _initDatabase() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = join(directory.path, 'music_app.db');
-    
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
-  }
+  final directory = await getApplicationDocumentsDirectory();
+  final path = join(directory.path, 'music_app.db');
 
+ 
+  return await openDatabase(
+    path,
+    version: 2,  
+    onCreate: _onCreate,
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        await db.insert('Artist', {
+          'artist_id': 'NEFFEX',
+          'artist_name': 'NEFFEX',
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+       
+        await db.insert('Songs', {
+          'song_id': 'SONG5',
+          'song_name': 'As You Fade Away',
+          'url': 'https://happysoulmusic.com/wp-content/grand-media/audio/As_You_Fade_Away_-_NEFFEX.mp3',
+          'duration': '4:16',
+          'genre': 'Pop',
+          'artist_id': 'NEFFEX',
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    },
+  );
+}
+
+
+  
   Future<void> _onCreate(Database db, int version) async {
+    
     await db.execute('''
       CREATE TABLE User (
         user_id TEXT PRIMARY KEY,
@@ -105,11 +127,11 @@ class DatabaseHelper {
       'user_id': 'ADMIN0',
       'user_name': 'cxladmin',
       'password': 'a212223',
-      'is_admin': 1
-    }); 
+      'is_admin': 1,
+    });
   }
 
-  // Song and playlist operations
+   
   Future<Map<String, dynamic>> idToSong(String songId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -125,5 +147,6 @@ class DatabaseHelper {
     }
   }
 
-  
+ 
 }
+
