@@ -100,7 +100,7 @@ class DatabaseHelper {
         FOREIGN KEY(song_id) REFERENCES Songs(song_id)
       )
     ''');
-
+    
     await db.insert('User', {
       'user_id': 'ADMIN0',
       'user_name': 'cxladmin',
