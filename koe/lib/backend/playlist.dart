@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'database_helper.dart';
 import 'song.dart';
 
@@ -6,19 +7,29 @@ class Playlist {
   String playlistName;
   List<Song> songs = [];
   static final dbHelper = DatabaseHelper.getInstance();
+  
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initialized => _initCompleter.future;
 
   Playlist({required this.playlistId, this.playlistName = ''}) {
     _initialize();
   }
 
   Future<void> _initialize() async {
-    playlistName = await getPlaylistName(playlistId);
-    await _loadSongs();
+    try {
+      playlistName = await getPlaylistName(playlistId);
+      await _loadSongs();
+      _initCompleter.complete();
+    } catch (e) {
+      _initCompleter.completeError(e);
+      rethrow;
+    }
   }
 
   Future<void> _loadSongs() async {
     final songIds = await playlistToSong(playlistId);
-
+    songs.clear();
+    
     for (int id in songIds) {
       final songMap = await dbHelper.idToSong(id);
       songs.add(Song.fromMap(songMap));

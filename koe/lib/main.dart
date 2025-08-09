@@ -1,32 +1,35 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
-import 'pages/admin_portal.dart';
-import 'pages/user_home_page.dart';
+import 'pages/register_page.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(KoeApp());
+  runApp(const MyApp());
 }
 
-class KoeApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Koe',
-      debugShowCheckedModeBanner: false,
+      title: 'Koe Login',
       theme: ThemeData.dark().copyWith(
-        primaryColor: Colors.greenAccent,
-        scaffoldBackgroundColor: Color(0xFF0D0F12),
-        textTheme: ThemeData.dark().textTheme.apply(
-              fontFamily: 'Roboto',
-            ),
+        scaffoldBackgroundColor: Colors.black,
+        primaryColor: Colors.purple,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[900],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          hintStyle: const TextStyle(color: Colors.grey),
+        ),
       ),
-      initialRoute: '/',
+      home: const LoginPage(),
       routes: {
-        '/': (_) => LoginPage(),
-        '/admin': (_) => AdminPortal(),
-        '/home': (_) => UserHomePage(),
+        '/login': (context) => const LoginPage(),
+        '/register': (context) => const RegisterPage(),
       },
     );
   }

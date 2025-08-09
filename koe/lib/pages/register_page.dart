@@ -1,29 +1,31 @@
-// lib/pages/login_page.dart
+// lib/pages/register_page.dart
 import 'package:flutter/material.dart';
 import '../backend/login.dart';
-import '../backend/admin.dart';
-import '../backend/theme.dart';
-import '../backend/listener.dart' as klistener;
-import 'admin_portal.dart';
-import 'user_portal.dart';
-import 'register_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = "Passwords do not match";
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -34,45 +36,22 @@ class _LoginPageState extends State<LoginPage> {
       final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
 
-      final userId = await LoginManager.authenticate(username, password);
+      final userId = await LoginManager.addUser(
+        userName: username,
+        password: password,
+      );
 
       if (userId == null) {
         setState(() {
-          _errorMessage = "Invalid username or password. Try signing up.";
+          _errorMessage = "Registration failed. Username may be taken.";
         });
         return;
       }
 
-      final isAdmin = await LoginManager.isAdmin(userId);
-
-      if (isAdmin) {
-        final admin = Admin(
-          userID: userId,
-          username: username,
-          theme: KoeTheme.black,
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => AdminPortal(admin: admin)),
-        );
-      } else {
-        final listener = klistener.Listener(
-          userID: userId,
-          username: username,
-          theme: KoeTheme.black,
-        );
-
-        await listener.loadAll();
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => UserPortal(listener: listener)),
-        );
-      }
+      Navigator.pop(context); // Return to login page after successful registration
     } catch (e) {
       setState(() {
-        _errorMessage = "Login failed: ${e.toString().replaceFirst('Exception: ', '')}";
+        _errorMessage = "Registration failed: ${e.toString()}";
       });
     } finally {
       setState(() {
@@ -85,11 +64,13 @@ class _LoginPageState extends State<LoginPage> {
     required TextEditingController controller,
     required String label,
     bool obscure = false,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+      validator: validator ?? 
+          (value) => value == null || value.isEmpty ? 'Required' : null,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -101,6 +82,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -120,10 +102,10 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 60),
                   const Text(
-                    "Koe",
+                    "Koe Registration",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: 32,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -131,7 +113,22 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 40),
                   _buildTextField(controller: _usernameController, label: "Username"),
                   const SizedBox(height: 12),
-                  _buildTextField(controller: _passwordController, label: "Password", obscure: true),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: "Password",
+                    obscure: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Required';
+                      if (value.length < 6) return 'Minimum 6 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    controller: _confirmPasswordController,
+                    label: "Confirm Password",
+                    obscure: true,
+                  ),
                   const SizedBox(height: 16),
                   if (_errorMessage != null)
                     Padding(
@@ -151,10 +148,10 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: _isLoading ? null : _login,
+                      onPressed: _isLoading ? null : _register,
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                          : const Text("Login"),
+                          : const Text("Register"),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -168,13 +165,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RegisterPage()),
-                        );
+                        Navigator.pop(context);
                       },
                       child: const Text(
-                        "Register",
+                        "Back to Login",
                         style: TextStyle(color: Colors.purple),
                       ),
                     ),

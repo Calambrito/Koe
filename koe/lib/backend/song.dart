@@ -1,14 +1,15 @@
+// filepath: lib/backend/song.dart
 import 'audio_player_manager.dart';
 import 'database_helper.dart';
 
 class Song {
-  final String songId;
+  final int songId;
   final String songName;
   final String url;
   final String? duration;
   final String? genre;
-  final String? artistId;
-  final String? artistName; 
+  final int? artistId;
+  final String? artistName;
 
   static final dbHelper = DatabaseHelper.getInstance();
 
@@ -22,28 +23,32 @@ class Song {
     this.artistName,
   });
 
-  Song.fromMap(Map<String, dynamic> map) :
-    songId = map['song_id'] as String,
-    songName = map['song_name'] as String,
-    url = map['url'] as String,
-    duration = map['duration'] as String?,
-    genre = map['genre'] as String?,
-    artistId = map['artist_id'] as String?,
-    artistName = map['artist_name'] as String?; 
+  // Construct from a DB map. Handles nullable artist fields.
+  Song.fromMap(Map<String, dynamic> map)
+      : songId = map['song_id'] as int,
+        songName = map['song_name'] as String,
+        url = map['url'] as String,
+        duration = map['duration'] as String?,
+        genre = map['genre'] as String?,
+        // artist_id in DB is an integer or null
+        artistId = map['artist_id'] is int ? map['artist_id'] as int : null,
+        // artist_name may be returned by joined queries
+        artistName = map['artist_name'] is String ? map['artist_name'] as String : null;
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'song_id': songId,
       'song_name': songName,
       'url': url,
-      if (duration != null) 'duration': duration,
-      if (genre != null) 'genre': genre,
-      if (artistId != null) 'artist_id': artistId,
-      if (artistName != null) 'artist_name': artistName, 
     };
+    if (duration != null) map['duration'] = duration;
+    if (genre != null) map['genre'] = genre;
+    if (artistId != null) map['artist_id'] = artistId;
+    if (artistName != null) map['artist_name'] = artistName;
+    return map;
   }
 
-  Future<List<Map<String, dynamic>>> getSongs() async {
+  static Future<List<Map<String, dynamic>>> getSongs() async {
     final db = await dbHelper.database;
     return await db.query(
       'Songs',
@@ -55,10 +60,31 @@ class Song {
     try {
       await AudioPlayerManager.instance.setUrl(url);
       await AudioPlayerManager.instance.player.play();
+      
     } catch (e) {
       rethrow;
     }
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Song && other.songId == songId);
+
+  @override
+  int get hashCode => songId.hashCode;
+
+  static Future<List<Song>> getSongsByArtist(String artistName) async {
+  final dbHelper = DatabaseHelper.getInstance();
+  final db = await dbHelper.database;
+  
+  final songMaps = await db.query(
+    'Songs',
+    where: 'artist_name = ?',
+    whereArgs: [artistName],
+  );
+
+  return songMaps.map((map) => Song.fromMap(map)).toList();
+}
 
   Future<void> pause() async {
     await AudioPlayerManager.instance.player.pause();

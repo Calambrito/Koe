@@ -1,3 +1,4 @@
+// filepath: lib/backend/database_helper.dart
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -98,6 +99,7 @@ class DatabaseHelper {
       )
     ''');
 
+    // Seed some data
     final artist1 = await db.insert('Artist', {
       'artist_name': 'John Doe',
     });
@@ -122,12 +124,14 @@ class DatabaseHelper {
       'artist_id': artist1,
     });
 
+    // FIXED: artist_id must be the integer id (artist2), not a string.
     await db.insert('Songs', {
       'song_name': 'As You Fade Away',
-      'url': 'https://happysoulmusic.com/wp-content/grand-media/audio/As_You_Fade_Away_-_NEFFEX.mp3',
+      'url':
+          'https://happysoulmusic.com/wp-content/grand-media/audio/As_You_Fade_Away_-_NEFFEX.mp3',
       'duration': '4:16',
       'genre': 'Pop',
-      'artist_id': 'NEFFEX',
+      'artist_id': artist2,
     });
 
     await db.insert('User', {
