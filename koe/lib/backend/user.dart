@@ -21,6 +21,6 @@ class User {
     required this.userID,
     required this.username,
     required this.theme,
-  }) : discover = Discover();  // initialize discover
+  }) : discover = Discover();
 
 }
