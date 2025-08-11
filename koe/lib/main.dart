@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:koe/clients/features/auth/view/pages/signup_page.dart';
+import 'package:koe/clients/features/splash/view/pages/splash_page.dart';
 import 'package:koe/core/theme/theme.dart';
 
 void main() {
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const SignupPage(),
+      home: const SplashPage(),
       theme: AppTheme.darkThemeMode,
       debugShowCheckedModeBanner: false,
     );

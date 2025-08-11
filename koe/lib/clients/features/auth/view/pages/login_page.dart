@@ -3,23 +3,21 @@ import 'package:koe/clients/features/auth/widgets/auth_gradient_button.dart';
 import 'package:koe/clients/features/auth/widgets/custom_field.dart';
 import 'package:koe/core/theme/app_pallete.dart';
 import 'package:flutter/gestures.dart';
-import 'package:koe/clients/features/auth/view/pages/login_page.dart';
+import 'package:koe/clients/features/auth/view/pages/signup_page.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
-  final nameController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -36,12 +34,10 @@ class _SignupPageState extends State<SignupPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'Sign up',
+                'Login',
                 style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-              CustomField(hintText: 'name'),
-              const SizedBox(height: 15),
               CustomField(hintText: 'email'),
               const SizedBox(height: 15),
               CustomField(hintText: 'password'),
@@ -53,12 +49,12 @@ class _SignupPageState extends State<SignupPage> {
               Container(
                 child: RichText(
                   text: TextSpan(
-                    text: 'Already have an account? ',
+                    text: 'Don\'t have an account? ',
                     style: Theme.of(context).textTheme.titleMedium,
 
                     children: [
                       TextSpan(
-                        text: ' Login',
+                        text: ' Sign up',
 
                         style: TextStyle(
                           color: Pallete.gradient1,
@@ -66,11 +62,11 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            // Navigate to login page
+                            // Navigate to signup page
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
+                                builder: (context) => const SignupPage(),
                               ),
                             );
                           },
