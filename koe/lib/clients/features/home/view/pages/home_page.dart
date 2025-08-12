@@ -4,6 +4,7 @@ import 'package:koe/core/theme/app_pallete.dart';
 import 'package:koe/backend/song.dart';
 import 'package:koe/clients/features/home/services/song_service.dart';
 import 'package:koe/clients/features/home/services/audio_player_service.dart';
+import 'package:koe/clients/features/home/view/pages/music_player_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -103,15 +104,21 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Handles when a song card is tapped
-  /// TODO: Implement song playback functionality
+  /// Navigates to the music player page
   Future<void> _handleSongTap(Song song) async {
     try {
-      await AudioPlayerService.instance.playSong(song);
-      // TODO: Update UI to show currently playing song
-      print('Playing song: ${song.songName}');
+      // Navigate to music player page
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => MusicPlayerPage(
+            song: song,
+            sourceContext: 'SEARCH', // You can customize this based on context
+          ),
+        ),
+      );
     } catch (e) {
       // TODO: Show error message to user
-      print('Error playing song: $e');
+      print('Error navigating to music player: $e');
     }
   }
 }
