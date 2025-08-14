@@ -33,6 +33,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // Custom tab selection
   int _selectedTabIndex = 0;
 
+  // Theme state
+  bool _isDarkMode = true; // Default to dark mode
+
   @override
   void initState() {
     super.initState();
@@ -176,26 +179,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const Spacer(),
 
           // Hello [Name] - right aligned
-          RichText(
-            text: TextSpan(
-              children: [
-                const TextSpan(
-                  text: 'Hello ',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
+          GestureDetector(
+            onLongPress: () => _showUserOptionsDialog(),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  const TextSpan(
+                    text: 'Hello ',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: _userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFFF6347), // Tomato color
+                  TextSpan(
+                    text: _userName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFFF6347), // Tomato color
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -1229,5 +1235,111 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     });
     print('Notification removed from frontend: $notificationId');
+  }
+
+  /// Shows user options dialog (theme switch and logout)
+  void _showUserOptionsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Settings',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Theme switch option
+              ListTile(
+                leading: Icon(
+                  _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  color: _isDarkMode ? Colors.yellow : Colors.blue,
+                ),
+                title: Text(
+                  _isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _toggleTheme();
+                },
+              ),
+              // Logout option
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _logout();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Toggle between light and dark mode
+  void _toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+
+    // TODO: Implement actual theme switching logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Switched to ${_isDarkMode ? 'Dark' : 'Light'} Mode',
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: _isDarkMode ? Colors.grey[800] : Colors.blue,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+    print('Theme switched to: ${_isDarkMode ? 'Dark' : 'Light'} Mode');
+  }
+
+  /// Handle logout functionality
+  void _logout() {
+    // TODO: Implement actual logout logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Logging out...',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+    print('User logged out');
+
+    // TODO: Navigate to login page or clear user session
   }
 }
