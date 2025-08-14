@@ -30,6 +30,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   // User name - replace with actual user data from backend
   String _userName = 'John'; // This should come from user authentication
 
+  // Custom tab selection
+  int _selectedTabIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -124,7 +127,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _buildHeader(),
 
             // Navigation tabs
-            _buildNavigationTabs(),
+            _buildCustomNavigationTabs(),
 
             // Tab content
             Expanded(
@@ -137,7 +140,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   );
                 },
                 child: IndexedStack(
-                  index: _tabController.index,
+                  index: _selectedTabIndex,
                   children: [
                     _buildPlaylistsTab(),
                     _buildDiscoverTab(),
@@ -200,33 +203,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildNavigationTabs() {
+  Widget _buildCustomNavigationTabs() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: TabBar(
-        controller: _tabController,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(width: 2.0, color: Colors.white),
-          insets: EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildTabItem(0, 'Playlists'),
+            _buildTabItem(1, 'Discover'),
+            _buildTabItem(2, 'Notifications'),
+          ],
         ),
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildTabItem(int index, String label) {
+    final isSelected = _selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTabIndex = index),
+      child: Container(
+        margin: const EdgeInsets.only(right: 20),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          style: TextStyle(
+            fontSize: isSelected ? 27 : 18,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.grey[800],
+          ),
+          child: Text(label),
         ),
-        tabs: const [
-          Tab(text: 'Playlists'),
-          Tab(text: 'Discover'),
-          Tab(text: 'Notifications'),
-        ],
-        onTap: (index) {
-          // Add scale animation when tab is tapped
-          setState(() {
-            // This will trigger a rebuild and create a smooth transition
-          });
-        },
       ),
     );
   }
@@ -237,16 +246,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Your Playlists',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 20),
-
           // Playlist expansion tiles
           _buildPlaylistExpansionTiles(),
         ],
@@ -595,18 +594,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: const Text(
-            'Notifications',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-
         // Notifications list with swipe to clear
         Expanded(child: _buildNotificationsList()),
       ],
