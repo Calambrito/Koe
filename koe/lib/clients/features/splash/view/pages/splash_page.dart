@@ -3,6 +3,7 @@ import 'package:koe/clients/features/auth/view/pages/login_page.dart';
 import 'package:koe/clients/features/auth/view/pages/signup_page.dart';
 import 'package:koe/clients/features/home/view/pages/main_navigation_page.dart';
 import 'package:koe/core/theme/app_pallete.dart';
+import 'package:koe/core/widgets/app_logo.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -15,7 +16,10 @@ class SplashPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App logo/title
+            // App logo
+            const AppLogo(width: 120, height: 120),
+            const SizedBox(height: 24),
+            // App title
             const Text(
               'Koe Music',
               style: TextStyle(
