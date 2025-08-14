@@ -27,7 +27,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.black87,
       body: _notifications.isEmpty
           ? Center(
               child: Text(

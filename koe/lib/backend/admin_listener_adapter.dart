@@ -1,3 +1,5 @@
+import 'package:koe/backend/facades.dart';
+
 import 'listener.dart';
 import 'database_helper.dart';
 import 'theme.dart';
@@ -9,7 +11,7 @@ class AdminListenerAdapter {
 
   // loading by user id
   static Future<AdminListenerAdapter> forUserId(int userId) async {
-    final listener = await Listener.loadUserById(userId);
+    final listener = await Listener.create(userId);
     return AdminListenerAdapter._(listener);
   }
 
@@ -28,7 +30,7 @@ class AdminListenerAdapter {
     }
 
     final userId = rows.first['user_id'] as int;
-    final listener = await Listener.loadUserById(userId);
+    final listener = await Listener.create(userId);
     return AdminListenerAdapter._(listener);
   }
 

@@ -109,7 +109,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   void _showSongOptions(Song song) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.black87,
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(16),
@@ -314,7 +314,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.black87,
       body: Column(
         children: [
           // Search bar

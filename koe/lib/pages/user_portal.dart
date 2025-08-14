@@ -103,7 +103,7 @@ class _UserPortalState extends State<UserPortal> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.black87,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +117,7 @@ class _UserPortalState extends State<UserPortal> {
                   const Text(
                     "Koe",
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: 45,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
@@ -128,8 +128,8 @@ class _UserPortalState extends State<UserPortal> {
                     child: Text(
                       widget.listener.username,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
                         color: Colors.purple,
                       ),
                     ),
@@ -141,7 +141,7 @@ class _UserPortalState extends State<UserPortal> {
             // Tabs
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -163,12 +163,12 @@ class _UserPortalState extends State<UserPortal> {
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                           style: TextStyle(
-                            fontSize: isSelected ? 24 : 18,
+                            fontSize: isSelected ? 27 : 18,
                             fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w200,
+                                isSelected ? FontWeight.w900 : FontWeight.w600,
                             color: isSelected
                                 ? Colors.white
-                                : Colors.grey[600],
+                                : Colors.grey[800],
                           ),
                           child: Text(label),
                         ),
@@ -179,7 +179,7 @@ class _UserPortalState extends State<UserPortal> {
               ),
             ),
 
-            const Divider(height: 1, thickness: 1, color: Colors.grey),
+            const Divider(height: 1, thickness: 1, color: Colors.white),
 
             // Main content
             Expanded(child: _buildTabContent()),

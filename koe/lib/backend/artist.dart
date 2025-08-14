@@ -1,3 +1,5 @@
+import 'package:koe/backend/facades.dart';
+
 import 'database_helper.dart';
 import 'listener.dart';
 
@@ -44,7 +46,7 @@ class Artist {
     for (final sub in subscriptions) {
       final userId = sub['user_id'] as int;
       try {
-        subscribers.add(await Listener.loadUserById(userId));
+        subscribers.add(await Listener.create(userId));
       } catch (e) {
         rethrow;
       }
