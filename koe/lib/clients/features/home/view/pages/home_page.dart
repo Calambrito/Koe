@@ -1303,362 +1303,387 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         context: context,
         barrierDismissible: true,
         builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            backgroundColor: Theme.of(dialogContext).cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Settings',
-                  style: TextStyle(
-                    color: Theme.of(dialogContext).colorScheme.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+          // Use Consumer to make the dialog reactive to theme changes
+          return Consumer<ThemeProvider>(
+            builder: (context, currentThemeProvider, child) {
+              final currentIsDarkMode = currentThemeProvider.isDarkMode;
+
+              return AlertDialog(
+                backgroundColor: Theme.of(dialogContext).cardColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _logout();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Settings',
+                      style: TextStyle(
+                        color: Theme.of(dialogContext).colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.logout,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Theme Mode Section
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.brightness_6,
-                        color: Theme.of(dialogContext).colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Theme Mode',
-                        style: TextStyle(
-                          color: Theme.of(dialogContext).colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Theme Mode Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            try {
-                              debugPrint('Setting light theme');
-                              themeProvider?.setTheme(false);
-                              debugPrint('Light theme set successfully');
-                            } catch (e) {
-                              debugPrint('Error setting light theme: $e');
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? Theme.of(dialogContext).colorScheme.surface
-                                  : Theme.of(dialogContext).colorScheme.primary
-                                        .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isDarkMode
-                                    ? Colors.transparent
-                                    : Theme.of(
-                                        dialogContext,
-                                      ).colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.wb_sunny,
-                                  color: Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.primary,
-                                  size: 24,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Light',
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      dialogContext,
-                                    ).colorScheme.onSurface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Clean & bright',
-                                  style: TextStyle(
-                                    color: Theme.of(dialogContext)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                if (!isDarkMode)
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 8),
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        dialogContext,
-                                      ).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            try {
-                              debugPrint('Setting dark theme');
-                              themeProvider?.setTheme(true);
-                              debugPrint('Dark theme set successfully');
-                            } catch (e) {
-                              debugPrint('Error setting dark theme: $e');
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? Theme.of(
-                                      dialogContext,
-                                    ).colorScheme.primary.withValues(alpha: 0.1)
-                                  : Theme.of(dialogContext).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isDarkMode
-                                    ? Theme.of(
-                                        dialogContext,
-                                      ).colorScheme.primary
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.nightlight_round,
-                                  color: Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.primary,
-                                  size: 24,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Dark',
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      dialogContext,
-                                    ).colorScheme.onSurface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Easy on eyes',
-                                  style: TextStyle(
-                                    color: Theme.of(dialogContext)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                if (isDarkMode)
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 8),
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        dialogContext,
-                                      ).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Color Palette Section
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.palette,
-                        color: Theme.of(dialogContext).colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Color Palette',
-                        style: TextStyle(
-                          color: Theme.of(dialogContext).colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Current Palette Display
-                  Row(
-                    children: [
-                      Text(
-                        'Current Palette: ',
-                        style: TextStyle(
-                          color: Theme.of(
-                            dialogContext,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontSize: 14,
-                        ),
-                      ),
-                      Container(
-                        width: 16,
-                        height: 16,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(dialogContext).pop();
+                        _logout();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: ColorPalettes.getMainColor(
-                            themeProvider?.currentPalette ?? 'Default',
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.logout,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Theme Mode Section
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.brightness_6,
+                            color: Theme.of(dialogContext).colorScheme.primary,
+                            size: 20,
                           ),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Theme Mode',
+                            style: TextStyle(
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        themeProvider?.currentPalette ?? 'Default',
-                        style: TextStyle(
-                          color: Theme.of(dialogContext).colorScheme.onSurface,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                  // Color Palette Grid
-                  Builder(
-                    builder: (context) {
-                      try {
-                        return const ColorPaletteSelector();
-                      } catch (e) {
-                        debugPrint('Error creating ColorPaletteSelector: $e');
-                        return Container(
-                          height: 80,
-                          child: Center(
-                            child: Text(
-                              'Unable to load color palettes',
+                      // Theme Mode Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                try {
+                                  debugPrint('Setting light theme');
+                                  currentThemeProvider.setTheme(false);
+                                  debugPrint('Light theme set successfully');
+                                } catch (e) {
+                                  debugPrint('Error setting light theme: $e');
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: currentIsDarkMode
+                                      ? Theme.of(
+                                          dialogContext,
+                                        ).colorScheme.surface
+                                      : Theme.of(dialogContext)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: currentIsDarkMode
+                                        ? Colors.transparent
+                                        : Theme.of(
+                                            dialogContext,
+                                          ).colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.wb_sunny,
+                                      color: Theme.of(
+                                        dialogContext,
+                                      ).colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Light',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          dialogContext,
+                                        ).colorScheme.onSurface,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Clean & bright',
+                                      style: TextStyle(
+                                        color: Theme.of(dialogContext)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.6),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    if (!currentIsDarkMode)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 8),
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            dialogContext,
+                                          ).colorScheme.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                try {
+                                  debugPrint('Setting dark theme');
+                                  currentThemeProvider.setTheme(true);
+                                  debugPrint('Dark theme set successfully');
+                                } catch (e) {
+                                  debugPrint('Error setting dark theme: $e');
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: currentIsDarkMode
+                                      ? Theme.of(dialogContext)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.1)
+                                      : Theme.of(
+                                          dialogContext,
+                                        ).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: currentIsDarkMode
+                                        ? Theme.of(
+                                            dialogContext,
+                                          ).colorScheme.primary
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.nightlight_round,
+                                      color: Theme.of(
+                                        dialogContext,
+                                      ).colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Dark',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          dialogContext,
+                                        ).colorScheme.onSurface,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Easy on eyes',
+                                      style: TextStyle(
+                                        color: Theme.of(dialogContext)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.6),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    if (currentIsDarkMode)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 8),
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            dialogContext,
+                                          ).colorScheme.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Color Palette Section
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.palette,
+                            color: Theme.of(dialogContext).colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Color Palette',
+                            style: TextStyle(
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Current Palette Display
+                      Row(
+                        children: [
+                          Text(
+                            'Current Palette: ',
+                            style: TextStyle(
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                              fontSize: 14,
+                            ),
+                          ),
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: ColorPalettes.getMainColor(
+                                currentThemeProvider?.currentPalette ??
+                                    'Default',
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            currentThemeProvider?.currentPalette ?? 'Default',
+                            style: TextStyle(
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Color Palette Grid
+                      Builder(
+                        builder: (context) {
+                          try {
+                            return const ColorPaletteSelector();
+                          } catch (e) {
+                            debugPrint(
+                              'Error creating ColorPaletteSelector: $e',
+                            );
+                            return Container(
+                              height: 80,
+                              child: Center(
+                                child: Text(
+                                  'Unable to load color palettes',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      dialogContext,
+                                    ).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Reset to Default Button
+                      if (currentThemeProvider?.currentPalette != 'Default')
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              try {
+                                debugPrint('Resetting to default palette');
+                                currentThemeProvider?.setPalette('Default');
+                                debugPrint('Default palette set successfully');
+                              } catch (e) {
+                                debugPrint('Error resetting palette: $e');
+                              }
+                            },
+                            icon: Icon(
+                              Icons.refresh,
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.primary,
+                            ),
+                            label: Text(
+                              'Reset to Default Palette',
                               style: TextStyle(
                                 color: Theme.of(
                                   dialogContext,
                                 ).colorScheme.onSurface,
                               ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Reset to Default Button
-                  if (themeProvider?.currentPalette != 'Default')
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          try {
-                            debugPrint('Resetting to default palette');
-                            themeProvider?.setPalette('Default');
-                            debugPrint('Default palette set successfully');
-                          } catch (e) {
-                            debugPrint('Error resetting palette: $e');
-                          }
-                        },
-                        icon: Icon(
-                          Icons.refresh,
-                          color: Theme.of(dialogContext).colorScheme.primary,
-                        ),
-                        label: Text(
-                          'Reset to Default Palette',
-                          style: TextStyle(
-                            color: Theme.of(
-                              dialogContext,
-                            ).colorScheme.onSurface,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                dialogContext,
+                              ).colorScheme.surface,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            dialogContext,
-                          ).colorScheme.surface,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(
-                  'Close',
-                  style: TextStyle(
-                    color: Theme.of(dialogContext).colorScheme.onSurface,
-                    fontSize: 16,
+                    ],
                   ),
                 ),
-              ),
-            ],
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(
+                      'Close',
+                      style: TextStyle(
+                        color: Theme.of(dialogContext).colorScheme.onSurface,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       );
