@@ -127,7 +127,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -191,7 +191,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
                     end: Alignment.bottomRight,
                     colors: [
                       _getAlbumArtColor(),
-                      _getAlbumArtColor().withOpacity(0.7),
+                      _getAlbumArtColor().withValues(alpha: 0.7),
                     ],
                   ),
                 ),
@@ -316,7 +316,7 @@ class _MusicPlayerPageState extends State<MusicPlayerPage> {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: Pallete.whiteColor,
-            inactiveTrackColor: Pallete.whiteColor.withOpacity(0.3),
+            inactiveTrackColor: Pallete.whiteColor.withValues(alpha: 0.3),
             thumbColor: Pallete.whiteColor,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             trackHeight: 3,

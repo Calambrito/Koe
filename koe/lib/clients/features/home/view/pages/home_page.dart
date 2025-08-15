@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:koe/clients/features/home/widgets/song_card.dart';
-import 'package:koe/core/theme/app_pallete.dart';
+import 'package:provider/provider.dart';
 import 'package:koe/backend/song.dart';
 import 'package:koe/clients/features/home/services/song_service.dart';
 import 'package:koe/clients/features/home/view/pages/music_player_page.dart';
+import 'package:koe/core/theme/theme_provider.dart';
+import 'package:koe/core/widgets/color_palette_selector.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,13 +29,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _notifications = [];
 
   // User name - replace with actual user data from backend
-  String _userName = 'John'; // This should come from user authentication
+  final String _userName = 'John'; // This should come from user authentication
 
   // Custom tab selection
   int _selectedTabIndex = 0;
-
-  // Theme state
-  bool _isDarkMode = true; // Default to dark mode
 
   @override
   void initState() {
@@ -121,16 +119,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // Header section
-            _buildHeader(),
+            _buildHeader(context, isDarkMode),
 
             // Navigation tabs
-            _buildCustomNavigationTabs(),
+            _buildCustomNavigationTabs(context, isDarkMode),
 
             // Tab content
             Expanded(
@@ -145,9 +146,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: IndexedStack(
                   index: _selectedTabIndex,
                   children: [
-                    _buildPlaylistsTab(),
-                    _buildDiscoverTab(),
-                    _buildNotificationsTab(),
+                    _buildPlaylistsTab(context, isDarkMode),
+                    _buildDiscoverTab(context, isDarkMode),
+                    _buildNotificationsTab(context, isDarkMode),
                   ],
                 ),
               ),
@@ -158,7 +159,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -166,12 +167,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // App title - left aligned
           Padding(
             padding: const EdgeInsets.only(left: 16.0),
-            child: const Text(
+            child: Text(
               'Koe',
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -180,24 +181,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
           // Hello [Name] - right aligned
           GestureDetector(
-            onLongPress: () => _showUserOptionsDialog(),
+            onLongPress: () => _showUserOptionsDialog(context, isDarkMode),
             child: RichText(
               text: TextSpan(
                 children: [
-                  const TextSpan(
+                  TextSpan(
                     text: 'Hello ',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   TextSpan(
                     text: _userName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFFFF6347), // Tomato color
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ],
@@ -209,23 +210,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCustomNavigationTabs() {
+  Widget _buildCustomNavigationTabs(BuildContext context, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _buildTabItem(0, 'Playlists'),
-            _buildTabItem(1, 'Discover'),
-            _buildTabItem(2, 'Notifications'),
+            _buildTabItem(context, 0, 'Playlists', isDarkMode),
+            _buildTabItem(context, 1, 'Discover', isDarkMode),
+            _buildTabItem(context, 2, 'Notifications', isDarkMode),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabItem(int index, String label) {
+  Widget _buildTabItem(
+    BuildContext context,
+    int index,
+    String label,
+    bool isDarkMode,
+  ) {
     final isSelected = _selectedTabIndex == index;
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
@@ -238,7 +244,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           style: TextStyle(
             fontSize: isSelected ? 27 : 18,
             fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.grey[800],
+            color: isSelected
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           child: Text(label),
         ),
@@ -246,20 +256,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPlaylistsTab() {
+  Widget _buildPlaylistsTab(BuildContext context, bool isDarkMode) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Playlist expansion tiles
-          _buildPlaylistExpansionTiles(),
+          _buildPlaylistExpansionTiles(context, isDarkMode),
         ],
       ),
     );
   }
 
-  Widget _buildPlaylistExpansionTiles() {
+  Widget _buildPlaylistExpansionTiles(BuildContext context, bool isDarkMode) {
     // Sample playlist data - you can replace with actual data from backend
     final playlists = [
       {
@@ -283,34 +293,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Column(
       children: playlists.map((playlist) {
         return _buildPlaylistExpansionTile(
+          context,
           playlist['name'] as String,
           playlist['songs'] as List<Song>,
           playlist['icon'] as IconData,
+          isDarkMode,
         );
       }).toList(),
     );
   }
 
   Widget _buildPlaylistExpansionTile(
+    BuildContext context,
     String playlistName,
     List<Song> songs,
     IconData icon,
+    bool isDarkMode,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ExpansionTile(
-        iconColor: Colors.white,
-        collapsedIconColor: Colors.white,
+        iconColor: Theme.of(context).colorScheme.onSurface,
+        collapsedIconColor: Theme.of(context).colorScheme.onSurface,
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF9C27B0),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: Colors.white, size: 20),
@@ -322,15 +336,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 children: [
                   Text(
                     playlistName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     '${songs.length} songs',
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -352,7 +371,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                   margin: const EdgeInsets.only(bottom: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F0F0F),
+                    color: isDarkMode
+                        ? const Color(0xFF0F0F0F)
+                        : const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -364,8 +385,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           children: [
                             Text(
                               song.songName,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -375,8 +398,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             const SizedBox(height: 2),
                             Text(
                               song.artistName ?? 'Unknown Artist',
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.6),
                                 fontSize: 12,
                               ),
                               maxLines: 1,
@@ -386,9 +412,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ),
                       ),
                       // Play icon
-                      const Icon(
+                      Icon(
                         Icons.play_arrow,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         size: 20,
                       ),
                     ],
@@ -403,7 +429,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDiscoverTab() {
+  Widget _buildDiscoverTab(BuildContext context, bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -411,19 +437,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Search bar
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A), // Dark gray background
+              color: isDarkMode
+                  ? const Color(0xFF2A2A2A)
+                  : const Color(0xFFE0E0E0),
               borderRadius: BorderRadius.circular(25),
             ),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              decoration: InputDecoration(
                 hintText: 'Search songs...',
-                hintStyle: TextStyle(color: Colors.grey),
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
-                suffixIcon: Icon(Icons.tune, color: Colors.grey), // Filter icon
+                hintStyle: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                suffixIcon: Icon(
+                  Icons.tune,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 15,
                 ),
@@ -439,13 +483,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           const SizedBox(height: 20),
 
           // All songs list with lazy loading
-          Expanded(child: _buildAllSongsList()),
+          Expanded(child: _buildAllSongsList(context, isDarkMode)),
         ],
       ),
     );
   }
 
-  Widget _buildAllSongsList() {
+  Widget _buildAllSongsList(BuildContext context, bool isDarkMode) {
     // Combine all songs from different sources for the discover page
     final allSongs = [
       ...madeForYouSongs,
@@ -470,11 +514,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.music_note, size: 64, color: Colors.grey[600]),
+            Icon(
+              Icons.music_note,
+              size: 64,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'No songs available',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -487,17 +542,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: Colors.grey[600]),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'No songs found for "$_searchQuery"',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Try searching for a different song or artist',
-              style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -506,15 +577,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     return ListView.builder(
-      itemCount: filteredSongs.length, // No loading indicator
+      itemCount: filteredSongs.length,
       itemBuilder: (context, index) {
         final song = filteredSongs[index];
-        return _buildSongListItem(song);
+        return _buildSongListItem(context, song, isDarkMode);
       },
     );
   }
 
-  Widget _buildSongListItem(Song song) {
+  Widget _buildSongListItem(BuildContext context, Song song, bool isDarkMode) {
     return GestureDetector(
       onTap: () => _handleSongTap(song),
       onLongPress: () => _showSongOptionsDialog(song),
@@ -523,7 +594,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -557,8 +628,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 children: [
                   Text(
                     song.songName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -568,7 +639,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   const SizedBox(height: 4),
                   Text(
                     song.artistName ?? 'Unknown Artist',
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -577,52 +653,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
 
             // Play icon
-            const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+            Icon(
+              Icons.play_arrow,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 24,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLoadingIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF9C27B0),
-          strokeWidth: 2,
-        ),
-      ),
-    );
-  }
+  // TODO: Implement loading indicator when needed
+  // Widget _buildLoadingIndicator() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     child: const Center(
+  //       child: CircularProgressIndicator(
+  //         color: Color(0xFF9C27B0),
+  //         strokeWidth: 2,
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildNotificationsTab() {
+  Widget _buildNotificationsTab(BuildContext context, bool isDarkMode) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Notifications list with swipe to clear
-        Expanded(child: _buildNotificationsList()),
+        Expanded(child: _buildNotificationsList(context, isDarkMode)),
       ],
     );
   }
 
-  Widget _buildNotificationsList() {
+  Widget _buildNotificationsList(BuildContext context, bool isDarkMode) {
     if (_notifications.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.notifications_off, size: 64, color: Colors.grey[600]),
+            Icon(
+              Icons.notifications_off,
+              size: 64,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               'No notifications',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'You\'re all caught up!',
-              style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -645,10 +742,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildNotificationItem(
+              context,
               notification['title'] as String,
               notification['subtitle'] as String,
               notification['icon'] as IconData,
               notification['color'] as Color,
+              isDarkMode,
             ),
           ),
         );
@@ -680,15 +779,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildNotificationItem(
+    BuildContext context,
     String title,
     String subtitle,
     IconData icon,
     Color color,
+    bool isDarkMode,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -708,8 +809,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -717,7 +818,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -727,98 +833,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHorizontalSection(String title, List<Song> songs) {
-    if (songs.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                // TODO: Navigate to full section
-              },
-              child: const Text(
-                'See All',
-                style: TextStyle(
-                  color: Color(0xFF9C27B0),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Simple text list of songs
-        Column(
-          children: songs.map((song) {
-            return GestureDetector(
-              onTap: () => _handleSongTap(song),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 16,
-                ),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    // Song name
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            song.songName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            song.artistName ?? 'Unknown Artist',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Play icon
-                    const Icon(Icons.play_arrow, color: Colors.white, size: 24),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
+  // TODO: Implement horizontal section when needed
+  // Widget _buildHorizontalSection(String title, List<Song> songs) {
+  //   if (songs.isEmpty) return const SizedBox.shrink();
+  //   // Implementation for horizontal song sections
+  // }
 
   Color _getAlbumArtColor(Song song) {
     final songName = song.songName.toLowerCase();
@@ -940,7 +959,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           '${song.songName} removed from $playlistName',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF9C27B0),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1197,7 +1216,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           '${song.songName} added to $playlistName',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF9C27B0),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1215,7 +1234,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           'Created playlist "$playlistName" and added ${song.songName}',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF9C27B0),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1238,89 +1257,92 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   /// Shows user options dialog (theme switch and logout)
-  void _showUserOptionsDialog() {
+  void _showUserOptionsDialog(BuildContext context, bool isDarkMode) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
+          backgroundColor: Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'Settings',
             style: TextStyle(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Theme switch option
-              ListTile(
-                leading: Icon(
-                  _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color: _isDarkMode ? Colors.yellow : Colors.blue,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Theme switch option
+                ListTile(
+                  leading: Icon(
+                    isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                    color: isDarkMode ? Colors.yellow : Colors.blue,
+                  ),
+                  title: Text(
+                    isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 16,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    themeProvider.toggleTheme();
+                  },
                 ),
-                title: Text(
-                  _isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                
+                const Divider(),
+                
+                // Color palette selector
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ColorPaletteSelector(),
                 ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _toggleTheme();
-                },
-              ),
-              // Logout option
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                
+                const Divider(),
+                
+                // Logout option
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 16,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _logout();
+                  },
                 ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _logout();
-                },
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+              child: Text(
+                'Close',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
         );
       },
     );
-  }
-
-  /// Toggle between light and dark mode
-  void _toggleTheme() {
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-    });
-
-    // TODO: Implement actual theme switching logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Switched to ${_isDarkMode ? 'Dark' : 'Light'} Mode',
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: _isDarkMode ? Colors.grey[800] : Colors.blue,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-    print('Theme switched to: ${_isDarkMode ? 'Dark' : 'Light'} Mode');
   }
 
   /// Handle logout functionality

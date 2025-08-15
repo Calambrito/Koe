@@ -1,33 +1,29 @@
-import 'listener.dart';
 import 'theme.dart';
 import 'database_helper.dart';
 
-
 class Facades {
   static Future<Map<String, dynamic>> loadUserById(int userId) async {
-  final dbHelper = DatabaseHelper.getInstance();
-  final db = await dbHelper.database;
+    final dbHelper = DatabaseHelper.getInstance();
+    final db = await dbHelper.database;
 
-  final userData = await db.query(
-    'User',
-    where: 'user_id = ?',
-    whereArgs: [userId],
-    limit: 1,
-  );
+    final userData = await db.query(
+      'User',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
 
-  if (userData.isEmpty) {
-    throw Exception('User with ID $userId not found');
+    if (userData.isEmpty) {
+      throw Exception('User with ID $userId not found');
+    }
+
+    final user = userData.first;
+    return {
+      'user_id': user['user_id'] as int,
+      'user_name': user['user_name'] as String,
+      'theme': _stringToTheme(user['theme'] as String?),
+    };
   }
-
-  final user = userData.first;
-  return {
-    'user_id': user['user_id'] as int,
-    'user_name': user['user_name'] as String,
-    'theme': _stringToTheme(user['theme'] as String?),
-  };
-}
-
-
 
   static KoeTheme _stringToTheme(String? themeString) {
     if (themeString == null) return KoeTheme.green;
@@ -69,13 +65,8 @@ class Facades {
     final dbHelper = DatabaseHelper.getInstance();
     final db = await dbHelper.database;
 
-    final artistsData = await db.query(
-      'Artist',
-      columns: ['artist_name'],
-    );
+    final artistsData = await db.query('Artist', columns: ['artist_name']);
 
     return artistsData.map((a) => a['artist_name'] as String).toList();
   }
-
-
 }

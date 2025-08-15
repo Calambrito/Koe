@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:koe/clients/features/auth/view/pages/signup_page.dart';
 
 class Pallete {
   static const cardColor = Color.fromRGBO(30, 30, 30, 1);
@@ -19,5 +18,5 @@ class Pallete {
 
   static const Color inactiveSeekColor = Colors.white38;
 
-  static var textColor;
+  static const Color textColor = Colors.white;
 }

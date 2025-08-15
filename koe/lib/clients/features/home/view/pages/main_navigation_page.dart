@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:koe/clients/features/home/view/pages/home_page.dart';
-import 'package:koe/core/theme/app_pallete.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
