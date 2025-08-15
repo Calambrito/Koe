@@ -234,6 +234,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     bool isDarkMode,
   ) {
     final isSelected = _selectedTabIndex == index;
+
+    // Get the current color palette
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final currentPalette = themeProvider.currentPalette;
+
+    // Get the main color from the selected palette
+    Color tabColor;
+    if (currentPalette == 'Default') {
+      // For default palette, use white in dark mode and black in light mode
+      tabColor = isDarkMode ? Colors.white : Colors.black;
+    } else {
+      // For other palettes, use the main color from the palette
+      tabColor = ColorPalettes.getMainColor(currentPalette);
+    }
+
     return GestureDetector(
       onTap: () => setState(() => _selectedTabIndex = index),
       child: Container(
@@ -245,11 +260,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           style: TextStyle(
             fontSize: isSelected ? 27 : 18,
             fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-            color: isSelected
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: isSelected ? tabColor : tabColor.withValues(alpha: 0.6),
           ),
           child: Text(label),
         ),
@@ -1579,15 +1590,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             height: 16,
                             decoration: BoxDecoration(
                               color: ColorPalettes.getMainColor(
-                                currentThemeProvider?.currentPalette ??
-                                    'Default',
+                                currentThemeProvider.currentPalette,
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            currentThemeProvider?.currentPalette ?? 'Default',
+                            currentThemeProvider.currentPalette,
                             style: TextStyle(
                               color: Theme.of(
                                 dialogContext,
@@ -1629,14 +1639,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       const SizedBox(height: 16),
 
                       // Reset to Default Button
-                      if (currentThemeProvider?.currentPalette != 'Default')
+                      if (currentThemeProvider.currentPalette != 'Default')
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
                               try {
                                 debugPrint('Resetting to default palette');
-                                currentThemeProvider?.setPalette('Default');
+                                currentThemeProvider.setPalette('Default');
                                 debugPrint('Default palette set successfully');
                               } catch (e) {
                                 debugPrint('Error resetting palette: $e');
