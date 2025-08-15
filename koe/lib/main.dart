@@ -4,6 +4,8 @@ import 'package:koe/clients/features/splash/view/pages/splash_page.dart';
 import 'package:koe/core/theme/theme_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -23,6 +25,14 @@ class MyApp extends StatelessWidget {
           home: const SplashPage(),
           theme: themeProvider.theme,
           debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.0)),
+              child: child!,
+            );
+          },
         );
       },
     );

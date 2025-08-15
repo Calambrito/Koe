@@ -4,8 +4,8 @@ class ColorPalettes {
   static const Map<String, Map<String, Color>> palettes = {
     'Default': {
       'light': Color(0xFFF8CCF0), // Light purple
-      'main': Color(0xFFD46BFF),   // Main purple
-      'dark': Color(0xFFB055CC),   // Dark purple
+      'main': Color(0xFFD46BFF), // Main purple
+      'dark': Color(0xFFB055CC), // Dark purple
     },
     'Pumpkin': {
       'light': Color(0xFFF6C1A6),
@@ -16,11 +16,6 @@ class ColorPalettes {
       'light': Color(0xFFF6E1A3),
       'main': Color(0xFFD99E3B),
       'dark': Color(0xFFC68A2A),
-    },
-    'Apple': {
-      'light': Color(0xFFC7E7B3),
-      'main': Color(0xFF4FB244),
-      'dark': Color(0xFF3D8A35),
     },
     'Teal': {
       'light': Color(0xFFBCE6E3),
@@ -59,21 +54,40 @@ class ColorPalettes {
     },
   };
 
-  static List<String> get paletteNames => palettes.keys.toList();
+  static List<String> get paletteNames {
+    final names = palettes.keys.toList();
+    return names.isNotEmpty ? names : ['Default'];
+  }
 
   static Color getLightColor(String paletteName) {
-    return palettes[paletteName]?['light'] ?? palettes['Default']!['light']!;
+    final palette = palettes[paletteName];
+    if (palette != null && palette.containsKey('light')) {
+      return palette['light']!;
+    }
+    return palettes['Default']!['light']!;
   }
 
   static Color getMainColor(String paletteName) {
-    return palettes[paletteName]?['main'] ?? palettes['Default']!['main']!;
+    final palette = palettes[paletteName];
+    if (palette != null && palette.containsKey('main')) {
+      return palette['main']!;
+    }
+    return palettes['Default']!['main']!;
   }
 
   static Color getDarkColor(String paletteName) {
-    return palettes[paletteName]?['dark'] ?? palettes['Default']!['dark']!;
+    final palette = palettes[paletteName];
+    if (palette != null && palette.containsKey('dark')) {
+      return palette['dark']!;
+    }
+    return palettes['Default']!['dark']!;
   }
 
   static Map<String, Color> getPalette(String paletteName) {
-    return palettes[paletteName] ?? palettes['Default']!;
+    final palette = palettes[paletteName];
+    if (palette != null) {
+      return palette;
+    }
+    return palettes['Default']!;
   }
 }

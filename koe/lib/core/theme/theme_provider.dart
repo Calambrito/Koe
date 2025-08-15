@@ -13,23 +13,53 @@ class ThemeProvider extends ChangeNotifier {
   String get currentPalette => _currentPalette;
 
   ThemeProvider() {
-    _loadThemeFromPrefs();
+    _initializeTheme();
+  }
+
+  // Initialize theme with error handling
+  Future<void> _initializeTheme() async {
+    try {
+      await _loadThemeFromPrefs();
+    } catch (e) {
+      // Fallback to default values if there's an error
+      _isDarkMode = true;
+      _currentPalette = 'Default';
+      notifyListeners();
+    }
   }
 
   // Load theme preference from SharedPreferences
   Future<void> _loadThemeFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool(_themeKey) ?? true; // Default to dark mode
-    _currentPalette =
-        prefs.getString(_paletteKey) ?? 'Default'; // Default palette
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isDarkMode = prefs.getBool(_themeKey) ?? true; // Default to dark mode
+      _currentPalette =
+          prefs.getString(_paletteKey) ?? 'Default'; // Default palette
+
+      // Validate palette name
+      if (!ColorPalettes.palettes.containsKey(_currentPalette)) {
+        _currentPalette = 'Default';
+      }
+
+      notifyListeners();
+    } catch (e) {
+      // Fallback to default values if there's an error
+      _isDarkMode = true;
+      _currentPalette = 'Default';
+      notifyListeners();
+    }
   }
 
   // Save theme preference to SharedPreferences
   Future<void> _saveThemeToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_themeKey, _isDarkMode);
-    await prefs.setString(_paletteKey, _currentPalette);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_themeKey, _isDarkMode);
+      await prefs.setString(_paletteKey, _currentPalette);
+    } catch (e) {
+      // Ignore save errors to prevent crashes
+      debugPrint('Error saving theme preferences: $e');
+    }
   }
 
   // Toggle theme
@@ -50,9 +80,25 @@ class ThemeProvider extends ChangeNotifier {
 
   // Set color palette
   Future<void> setPalette(String paletteName) async {
-    if (_currentPalette != paletteName &&
-        ColorPalettes.palettes.containsKey(paletteName)) {
-      _currentPalette = paletteName;
+    try {
+      // Validate palette name
+      if (paletteName.isEmpty) {
+        paletteName = 'Default';
+      }
+
+      // Check if palette exists
+      if (!ColorPalettes.palettes.containsKey(paletteName)) {
+        paletteName = 'Default';
+      }
+
+      if (_currentPalette != paletteName) {
+        _currentPalette = paletteName;
+        await _saveThemeToPrefs();
+        notifyListeners();
+      }
+    } catch (e) {
+      // Fallback to default palette if there's an error
+      _currentPalette = 'Default';
       await _saveThemeToPrefs();
       notifyListeners();
     }

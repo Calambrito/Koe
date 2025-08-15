@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:koe/clients/features/auth/view/pages/login_page.dart';
 import 'package:koe/clients/features/auth/view/pages/signup_page.dart';
 import 'package:koe/clients/features/home/view/pages/main_navigation_page.dart';
-import 'package:koe/core/theme/app_pallete.dart';
 import 'package:koe/core/widgets/app_logo.dart';
 
 class SplashPage extends StatelessWidget {
@@ -11,7 +10,7 @@ class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Pallete.backgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -20,18 +19,23 @@ class SplashPage extends StatelessWidget {
             const AppLogo(width: 120, height: 120),
             const SizedBox(height: 24),
             // App title
-            const Text(
+            Text(
               'Koe Music',
               style: TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.bold,
-                color: Pallete.whiteColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Music Streaming App',
-              style: TextStyle(fontSize: 18, color: Pallete.subtitleText),
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
             const SizedBox(height: 60),
 
@@ -84,8 +88,11 @@ class SplashPage extends StatelessWidget {
       height: 50,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        gradient: const LinearGradient(
-          colors: [Pallete.gradient1, Pallete.gradient2],
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+          ],
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
         ),
@@ -93,8 +100,8 @@ class SplashPage extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Pallete.transparentColor,
-          shadowColor: Pallete.transparentColor,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -102,14 +109,14 @@ class SplashPage extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Pallete.whiteColor, size: 20),
+            Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(
               text,
               style: const TextStyle(
+                color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Pallete.whiteColor,
               ),
             ),
           ],
