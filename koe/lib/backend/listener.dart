@@ -4,7 +4,9 @@ import 'database_helper.dart';
 import 'theme.dart';
 import 'facades.dart';
 
-class Listener extends User {
+class Listener extends User implements ListenerBase {
+ 
+//class Listener extends User {
   List<int>? _playlists;
   List<String>? _notifications;
   List<String>? _artists;
@@ -98,4 +100,4 @@ class Listener extends User {
 
     _playlists?.remove(playlistId);
   }
-}
+}*/
