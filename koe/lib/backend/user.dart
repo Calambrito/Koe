@@ -41,4 +41,3 @@ class User {
     throw Exception('User not found');
   }
 }
-
