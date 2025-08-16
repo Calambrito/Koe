@@ -1,24 +1,17 @@
+import 'database_helper.dart';
+import 'facades.dart';
+import 'theme.dart';
 import 'discover.dart';
 import 'user.dart';
-import 'database_helper.dart';
-import 'theme.dart';
-import 'facades.dart';
 
-class Listener extends User implements ListenerBase {
- 
-//class Listener extends User {
-  List<int>? _playlists;
-  List<String>? _notifications;
-  List<String>? _artists;
-  final Discover _discover = Discover();
-
+class Listener extends User {
   Listener._internal({
     required super.userID,
     required super.username,
     required super.theme,
   });
 
-  // Factory constructor that loads user data and playlists/etc.
+ 
   static Future<Listener> create(int userID) async {
     final userMap = await Facades.loadUserById(userID);
 
@@ -28,63 +21,28 @@ class Listener extends User implements ListenerBase {
       theme: userMap['theme'] as KoeTheme,
     );
 
-    await listener.loadAll();
+    await listener.loadAll(); 
     return listener;
   }
 
-  List<int> get playlists => _playlists ?? [];
-  List<String> get notifications => _notifications ?? [];
-  List<String> get artists => _artists ?? [];
-  Discover get discover => _discover;
-
-  Future<String> getUsername() async {
-    final dbHelper = DatabaseHelper.getInstance();
-    final db = await dbHelper.database;
-    final userRow = await db.query(
-      'User',
-      where: 'user_id = ?',
-      whereArgs: [userID],
-      limit: 1,
-    );
-    if (userRow.isNotEmpty) {
-      return userRow.first['user_name'] as String;
-    }
-    throw Exception('User not found');
-  }
 
   Future<void> loadAll() async {
-    _playlists = await Facades.loadPlaylists(userID);
-    _notifications = await Facades.loadNotifications(userID);
-    _artists = await Facades.loadArtists();
+    playlists = await Facades.loadPlaylists(userID);
+    notifications = await Facades.loadNotifications(userID);
+    artists = await Facades.loadArtists();
   }
 
   Future<void> createPlaylist(String playlistName) async {
-    final dbHelper = DatabaseHelper.getInstance();
-    final db = await dbHelper.database;
+    final db = await DatabaseHelper.getInstance().database;
     final playlistId = await db.insert('Playlist', {
       'playlist_name': playlistName,
       'user_id': userID,
     });
-
-    _playlists ??= [];
-    _playlists!.add(playlistId);
-  }
-
-  Future<void> addNotification(String message) async {
-    final dbHelper = DatabaseHelper.getInstance();
-    final db = await dbHelper.database;
-    await db.insert('Notification', {
-      'user_id': userID,
-      'message': message,
-    });
-
-    _notifications ??= [];
-    _notifications!.add(message);
+    playlists.add(playlistId);
   }
 
   Future<void> deletePlaylist(int playlistId) async {
-    final dbHelper = DatabaseHelper.getInstance();
-    final db = await dbHelper.database;
+    final db = await DatabaseHelper.getInstance().database;
 
     await db.delete(
       'Playlist_Songs',
@@ -98,6 +56,8 @@ class Listener extends User implements ListenerBase {
       whereArgs: [playlistId],
     );
 
-    _playlists?.remove(playlistId);
+    playlists.remove(playlistId);
   }
-}*/
+}
+
+
