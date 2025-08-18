@@ -9,6 +9,7 @@ import '../widgets/custom_nav_tabs.dart';
 import 'notifications.dart';
 import 'playlists.dart';
 import 'discover.dart';
+import '../widgets/nowplaying.dart'; // <-- new import
 
 class UserPortal extends StatefulWidget {
   final klistener.Listener listener;
@@ -67,12 +68,11 @@ class _UserPortalState extends State<UserPortal> {
           currentTheme: _currentTheme,
         );
       case 1:
-        return DiscoverPage(  // Updated Discover tab
-        listener: widget.listener,
-        currentTheme: _currentTheme,
-      );
+        return DiscoverPage(
+          listener: widget.listener,
+          currentTheme: _currentTheme,
+        );
       case 2:
-        // Use the NotificationsPage we've just added and pass listener + theme
         return NotificationsPage(
           listener: widget.listener,
           currentTheme: _currentTheme,
@@ -146,7 +146,8 @@ class _UserPortalState extends State<UserPortal> {
               ),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  // Add bottom padding to avoid overlap with now playing bar
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                   child: _buildTabContent(),
                 ),
               ),
@@ -167,6 +168,14 @@ class _UserPortalState extends State<UserPortal> {
                 logout: _logout,
               ),
             ),
+
+          // Now playing bar pinned to bottom (visible across tabs)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: NowPlayingBar(currentTheme: _currentTheme),
+          ),
         ],
       ),
     );

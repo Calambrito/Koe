@@ -56,15 +56,40 @@ class Song {
     );
   }
 
-  Future<void> play() async {
+      Future<void> play() async {
+    final mgr = AudioPlayerManager.instance;
     try {
-      await AudioPlayerManager.instance.setUrl(url);
-      await AudioPlayerManager.instance.player.play();
-      
+      // If this exact song is already loaded (currentSong) then just resume playback
+      // (avoids calling setUrl again which would reset position).
+      if (mgr.currentSong?.songId == songId) {
+        await mgr.player.play();
+        return;
+      }
+
+      // Otherwise: mark as current, load the URL and start playback.
+      mgr.currentSong = this;
+      await mgr.setUrl(url);
+      await mgr.player.play();
+    } catch (e) {
+      // If we optimistically set currentSong above and playback failed, revert.
+      if (AudioPlayerManager.instance.currentSong?.songId == songId) {
+        AudioPlayerManager.instance.currentSong = null;
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> pause() async {
+    try {
+      // Pause the player but DO NOT clear currentSong so we can resume from the same position.
+      await AudioPlayerManager.instance.player.pause();
+      // Do not set currentSong = null here.
     } catch (e) {
       rethrow;
     }
   }
+
+
 
   @override
   bool operator ==(Object other) =>
@@ -86,9 +111,6 @@ class Song {
   return songMaps.map((map) => Song.fromMap(map)).toList();
 }
 
-  Future<void> pause() async {
-    await AudioPlayerManager.instance.player.pause();
-  }
 
   Future<void> stop() async {
     await AudioPlayerManager.instance.player.stop();

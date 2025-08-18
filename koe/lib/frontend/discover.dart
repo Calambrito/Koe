@@ -1,3 +1,4 @@
+// lib/frontend/discover.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../backend/search_strategy.dart';
@@ -7,7 +8,8 @@ import '../backend/artist.dart';
 import '../backend/listener.dart' as klistener;
 import '../backend/koe_palette.dart';
 import '../backend/theme.dart';
-import '../backend/database_helper.dart'; // make sure this import exists
+import '../backend/database_helper.dart';
+import '../backend/audio_player_manager.dart';
 
 class DiscoverPage extends StatefulWidget {
   final klistener.Listener listener;
@@ -32,11 +34,35 @@ class _DiscoverPageState extends State<DiscoverPage> {
   bool _isSearching = false;
 
   Timer? _debounce;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _loadShowcaseSongs();
+
+    // Poll the AudioPlayerManager to keep UI in sync with playback state.
+    // This is defensive: if your audio lib provides a state stream, you can
+    // replace this with a subscription for better efficiency.
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+      _refreshPlaybackState();
+    });
+  }
+
+  void _refreshPlaybackState() {
+    final mgr = AudioPlayerManager.instance;
+    try {
+      final mgrSong = mgr.currentSong;
+      // Only call setState when something changed to avoid excessive rebuilds.
+      final changed = (mgrSong?.songId != _currentlyPlayingSong?.songId);
+      if (changed) {
+        setState(() {
+          _currentlyPlayingSong = mgrSong;
+        });
+      }
+    } catch (_) {
+      // If something goes wrong reading the player, ignore — don't crash UI.
+    }
   }
 
   Color _paletteMain() {
@@ -95,22 +121,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Future<void> _togglePlay(Song song) async {
     try {
-      final same =
-          _currentlyPlayingSong != null &&
-          _currentlyPlayingSong!.songId == song.songId;
+      final mgr = AudioPlayerManager.instance;
+      // determine if this exact song is currently playing
+      final isPlayingThis = mgr.currentSong?.songId == song.songId &&
+          (mgr.player.playing == true); // <- adjust if your API differs
 
-      if (same) {
+      if (isPlayingThis) {
+        // If it's playing -> pause it
         await song.pause();
-        setState(() => _currentlyPlayingSong = null);
-      } else {
-        if (_currentlyPlayingSong != null) {
-          try {
-            await _currentlyPlayingSong!.pause();
-          } catch (_) {}
-        }
-        await song.play();
-        setState(() => _currentlyPlayingSong = song);
+        setState(() {});
+        return;
       }
+
+      // If some other song is playing, pause it first (keeps currentSong intact for that song).
+      if (mgr.currentSong != null && mgr.currentSong!.songId != song.songId) {
+        await mgr.player.pause();
+      }
+
+      // Start or resume requested song.
+      await song.play();
+      setState(() {});
     } catch (e) {
       debugPrint('Play/pause error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -186,10 +216,17 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Widget _buildSongTile(Song song) {
-    final playing =
-        _currentlyPlayingSong != null &&
-        _currentlyPlayingSong!.songId == song.songId;
-    final textColor = Colors.black;
+    // Determine playing by asking the audio manager directly for the most reliable state.
+    final mgr = AudioPlayerManager.instance;
+    bool playing = false;
+    try {
+      playing = (mgr.currentSong?.songId == song.songId) && (mgr.player.playing == true);
+    } catch (_) {
+      // Fallback: compare currentSong only if `playing` property absent.
+      playing = mgr.currentSong?.songId == song.songId;
+    }
+
+    final textColor = widget.currentTheme.isDarkMode ? Colors.white : Colors.black;
 
     return ListTile(
       tileColor: _paletteMain(),
@@ -342,6 +379,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _pollTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }

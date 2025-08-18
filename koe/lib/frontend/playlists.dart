@@ -6,6 +6,7 @@ import '../backend/playlist.dart';
 import '../backend/song.dart';
 import '../backend/koe_palette.dart';
 import '../backend/theme.dart';
+import '../backend/audio_player_manager.dart';
 
 class PlaylistsPage extends StatefulWidget {
   final klistener.Listener listener;
@@ -71,30 +72,46 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
 
   Future<void> _togglePlay(Song song) async {
     try {
-      final same = _currentlyPlayingSong != null && _currentlyPlayingSong!.songId == song.songId;
-      if (same) {
+      final mgr = AudioPlayerManager.instance;
+      // determine if this exact song is currently playing
+      final isPlayingThis = mgr.currentSong?.songId == song.songId &&
+          (mgr.player.playing == true); // <- adjust if your API differs
+
+      if (isPlayingThis) {
+        // If it's playing -> pause it
         await song.pause();
-        setState(() => _currentlyPlayingSong = null);
-      } else {
-        if (_currentlyPlayingSong != null) {
-          try {
-            await _currentlyPlayingSong!.pause();
-          } catch (_) {}
-        }
-        await song.play();
-        setState(() => _currentlyPlayingSong = song);
+        setState(() {});
+        return;
       }
+
+      // If some other song is playing, pause it first (keeps currentSong intact for that song).
+      if (mgr.currentSong != null && mgr.currentSong!.songId != song.songId) {
+        await mgr.player.pause();
+      }
+
+      // Start or resume requested song.
+      await song.play();
+      setState(() {});
     } catch (e) {
       debugPrint('Play/pause error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to play/pause the track.')),
+        const SnackBar(content: Text('Unable to play/pause the track')),
       );
     }
   }
 
-  Widget _buildSongTile(Song song) {
-    final playing = _currentlyPlayingSong != null && _currentlyPlayingSong!.songId == song.songId;
-    final textColor = Colors.black; // inner song text must be black
+    Widget _buildSongTile(Song song) {
+    final mgr = AudioPlayerManager.instance;
+
+    // More robust isPlaying check: both same song AND player.playing == true
+    bool isPlaying = false;
+    try {
+      isPlaying = mgr.currentSong?.songId == song.songId && (mgr.player.playing == true);
+    } catch (_) {
+      isPlaying = mgr.currentSong?.songId == song.songId;
+    }
+
+    final textColor = Colors.black;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -120,7 +137,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
         ],
       ),
       trailing: IconButton(
-        icon: Icon(playing ? Icons.pause_circle_filled : Icons.play_circle_fill),
+        icon: Icon(
+          isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+        ),
         iconSize: 30,
         onPressed: () => _togglePlay(song),
       ),
