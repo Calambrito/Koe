@@ -1,6 +1,6 @@
 import 'theme.dart';
 import 'database_helper.dart';
-
+import 'koe_palette.dart';
 class Facades {
   static Future<Map<String, dynamic>> loadUserById(int userId) async {
     final dbHelper = DatabaseHelper.getInstance();
@@ -21,16 +21,11 @@ class Facades {
     return {
       'user_id': user['user_id'] as int,
       'user_name': user['user_name'] as String,
-      'theme': _stringToTheme(user['theme'] as String?),
+      'theme': KoeTheme(
+        paletteName: KoeColorName.dragonfruit,
+        isDarkMode: true,
+      ),
     };
-  }
-
-  static KoeTheme _stringToTheme(String? themeString) {
-    if (themeString == null) return KoeTheme.green;
-    return KoeTheme.values.firstWhere(
-      (t) => t.name == themeString,
-      orElse: () => KoeTheme.green,
-    );
   }
 
   static Future<List<int>> loadPlaylists(int userID) async {
@@ -57,7 +52,7 @@ class Facades {
       where: 'user_id = ?',
       whereArgs: [userID],
     );
-
+    
     return notificationsData.map((n) => n['message'] as String).toList();
   }
 

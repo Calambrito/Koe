@@ -68,7 +68,7 @@ class Playlist {
     ));
   }
 
-  Future<String> getPlaylistName(int playlistId) async {
+  static Future<String> getPlaylistName(int playlistId) async {
     final db = await dbHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'Playlist',

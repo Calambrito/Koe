@@ -47,6 +47,4 @@ class AdminListenerAdapter {
   Future<void> userDeletePlaylist(int playlistId) =>
       _listener.deletePlaylist(playlistId);
 
-  Future<void> userAddNotification(String message) =>
-      _listener.addNotification(message);
 }

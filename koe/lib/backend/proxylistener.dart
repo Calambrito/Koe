@@ -9,7 +9,6 @@ class ProxyListener extends User {
     required super.username,
     required super.theme,
   });
-
  
   static Future<ProxyListener> create(int userID) async {
     final userMap = await Facades.loadUserById(userID);
@@ -21,15 +20,12 @@ class ProxyListener extends User {
     );
   }
 
-  
   Future<void> addNotification(String message) async {
     final db = await DatabaseHelper.getInstance().database;
     await db.insert('Notification', {
       'user_id': userID,
       'message': message,
     });
-
-    notifications.add(message); 
   }
 }
 

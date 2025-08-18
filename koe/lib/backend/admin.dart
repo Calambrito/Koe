@@ -1,11 +1,24 @@
 import 'user.dart';
 import 'database_helper.dart';
 import 'song.dart';
+import 'facades.dart';
 
 class Admin extends User {
   Admin({required super.userID, required super.username, required super.theme});
   static final dbHelper = DatabaseHelper.getInstance();
   
+  static Future<Admin> create(int userId) async {
+    final userData = await Facades.loadUserById(userId);
+    
+    return Admin(
+      userID: userData['user_id'] as int,
+      username: userData['user_name'] as String,
+      theme: userData['theme'],
+    );
+  }
+
+  int get id => userID;
+
   Future<int> addSong({
     required String songName,
     required String url,

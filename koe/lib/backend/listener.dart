@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'facades.dart';
 import 'theme.dart';
-import 'discover.dart';
 import 'user.dart';
+import 'discover.dart';
 
 class Listener extends User {
   Listener._internal({
@@ -10,8 +11,11 @@ class Listener extends User {
     required super.username,
     required super.theme,
   });
+  List<int> playlists = [];
+  List<String> notifications = [];
+  List<String> artists = [];
+  final Discover discover = Discover();
 
- 
   static Future<Listener> create(int userID) async {
     final userMap = await Facades.loadUserById(userID);
 
@@ -21,14 +25,20 @@ class Listener extends User {
       theme: userMap['theme'] as KoeTheme,
     );
 
-    await listener.loadAll(); 
+    await listener.loadAll();
     return listener;
   }
 
+  int get id => userID;
+  String get name => username;
 
   Future<void> loadAll() async {
     playlists = await Facades.loadPlaylists(userID);
     notifications = await Facades.loadNotifications(userID);
+    debugPrint("here are notifs");
+    for (var i = 0; i < notifications.length; i++) {
+      debugPrint("Notification $i: ${notifications[i]}");
+    }
     artists = await Facades.loadArtists();
   }
 
@@ -58,6 +68,23 @@ class Listener extends User {
 
     playlists.remove(playlistId);
   }
+
+  Future<bool> removeNotification(int userId, String message) async {
+    try {
+      final db = await DatabaseHelper.getInstance().database;
+      final rows = await db.delete(
+        'Notification',
+        where: 'user_id = ? AND message = ?',
+        whereArgs: [userId, message],
+      );
+
+      if (rows > 0 && userID == userId) {
+        notifications.removeWhere((n) => n == message);
+      }
+
+      return rows > 0;
+    } catch (e) {
+      return false;
+    }
+  }
 }
-
-

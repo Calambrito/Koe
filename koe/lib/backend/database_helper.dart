@@ -1,4 +1,5 @@
 // filepath: lib/backend/database_helper.dart
+import 'package:flutter/widgets.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,7 +37,6 @@ class DatabaseHelper {
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_name TEXT NOT NULL,
         password TEXT NOT NULL,
-        theme TEXT DEFAULT 'green',
         is_admin INTEGER DEFAULT 0
       )
     ''');
@@ -74,7 +74,6 @@ class DatabaseHelper {
         notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         message TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(user_id) REFERENCES User(user_id)
       )
     ''');
@@ -134,12 +133,66 @@ class DatabaseHelper {
       'artist_id': artist2,
     });
 
-    await db.insert('User', {
-      'user_name': 'cxladmin',
-      'password': 'a212223',
-      'is_admin': 1,
+  int debugUserId;
+  final existingDebug = await db.query(
+    'User',
+    columns: ['user_id'],
+    where: 'user_name = ?',
+    whereArgs: ['a'],
+  );
+
+  if (existingDebug.isNotEmpty) {
+    debugUserId = existingDebug.first['user_id'] as int;
+  } else {
+    debugUserId = await db.insert('User', {
+      'user_name': 'a',
+      'password': 'a',
+      'is_admin': 0,
     });
   }
+
+  // --- seed notifications for debug user 'a' only if none exist (avoids duplicates) ---
+  final countResult = await db.rawQuery(
+    'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
+    [debugUserId],
+  );
+  final existingNotifsCount = countResult.isNotEmpty
+      ? int.tryParse(countResult.first.values.first.toString()) ?? 0
+      : 0;
+
+  if (existingNotifsCount == 0) {
+    await db.insert('Notification', {
+      'user_id': debugUserId,
+      'message': 'Welcome to Koe! Check out our curated playlists.',
+    });
+    await db.insert('Notification', {
+      'user_id': debugUserId,
+      'message': 'New single from The Echoes just dropped — listen now!',
+    });
+    await db.insert('Notification', {
+      'user_id': debugUserId,
+      'message': 'Your playlist "Chill Vibes" reached 100 followers! 🎉',
+    });
+    await db.insert('Notification', {
+      'user_id': debugUserId,
+      'message': 'Concert near you: Luna Park — tickets available.',
+    });
+    await db.insert('Notification', {
+      'user_id': debugUserId,
+      'message': 'Recommended for you: Your Discover mix is ready.',
+    });
+  }
+
+  // optional debug output to verify seeding
+  final afterCountRes = await db.rawQuery(
+    'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
+    [debugUserId],
+  );
+  final notifCount = afterCountRes.isNotEmpty
+      ? int.tryParse(afterCountRes.first.values.first.toString()) ?? 0
+      : 0;
+  debugPrint('Seeded notifications for debug user "a" (user_id=$debugUserId): $notifCount rows');
+}
 
   Future<Map<String, dynamic>> idToSong(int songId) async {
     final db = await database;
@@ -155,4 +208,19 @@ class DatabaseHelper {
       throw Exception('Song with ID $songId not found');
     }
   }
+
+  static Future<List<Map<String, dynamic>>> showcaseSongs(Database db) async {
+  try {
+    final List<Map<String, dynamic>> songs = await db.query(
+      'Songs',
+      columns: ['song_id', 'song_name', 'url', 'duration', 'genre', 'artist_id'],
+      limit: 30,
+    );
+
+    return songs;
+  } catch (e) {
+    debugPrint('Error fetching songs: $e');
+    return [];
+  }
+}
 }

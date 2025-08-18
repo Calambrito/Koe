@@ -1,7 +1,5 @@
 import 'database_helper.dart';
-import 'proxy_listener.dart';
-import 'facades.dart';
-import 'theme.dart';
+import 'proxylistener.dart';
 
 class Artist {
   late final int artistId;
@@ -54,7 +52,6 @@ class Artist {
   return subscribers;
 }
 
-
   Future<void> sendNewSongNotification() async {
     final subscribers = await getSubscribers();
     final message = '$artistName has uploaded a new song';
@@ -62,6 +59,17 @@ class Artist {
     for (final listener in subscribers) {
       await listener.addNotification(message);
     }
+  }
+
+  static Future<void> subscribe(int artistId, int userId) async {
+    final db = await dbHelper.database;
+    await db.insert(
+      'Subscription',
+      {
+        'artist_id': artistId,
+        'user_id': userId,
+      },
+    );
   }
 }
 
