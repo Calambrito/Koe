@@ -107,26 +107,41 @@ class _UserPortalState extends State<UserPortal> {
               ),
               GestureDetector(
                 onTap: _toggleSettings,
-                child: RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Hello ',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
+                onLongPress: _toggleSettings,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _currentTheme.isDarkMode
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.05),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Hello ',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: _currentTheme.isDarkMode
+                                ? Colors.white
+                                : Colors.black,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: widget.listener.username,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: colorPalette['main']!,
-                          fontWeight: FontWeight.w800,
+                        TextSpan(
+                          text: widget.listener.username,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: colorPalette['main']!,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -147,7 +162,7 @@ class _UserPortalState extends State<UserPortal> {
               Expanded(
                 child: Container(
                   // Add bottom padding to avoid overlap with now playing bar
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 92),
                   child: _buildTabContent(),
                 ),
               ),
@@ -159,8 +174,8 @@ class _UserPortalState extends State<UserPortal> {
               curve: Curves.easeOut,
               right: 0,
               top: 0,
-              bottom: 0,
-              width: MediaQuery.of(context).size.width * 0.8,
+              bottom: 80, // Account for NowPlayingBar height
+              width: MediaQuery.of(context).size.width * 0.85,
               child: SettingsPanel(
                 currentTheme: _currentTheme,
                 updateTheme: _updateTheme,

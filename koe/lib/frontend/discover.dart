@@ -47,6 +47,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
     _pollTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
       _refreshPlaybackState();
     });
+
+    // Test audio URLs on startup
+    _testAudioUrls();
   }
 
   void _refreshPlaybackState() {
@@ -91,6 +94,55 @@ class _DiscoverPageState extends State<DiscoverPage> {
     }
   }
 
+  Future<void> _testAudioUrls() async {
+    debugPrint('Testing audio URLs...');
+    for (final song in _showcaseSongs) {
+      debugPrint('Song: ${song.songName}, URL: ${song.url}');
+    }
+  }
+
+  Future<void> _testFirstSong() async {
+    if (!mounted) return;
+
+    if (_showcaseSongs.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No songs available to test')),
+        );
+      }
+      return;
+    }
+
+    final firstSong = _showcaseSongs.first;
+    debugPrint(
+      'Testing first song: ${firstSong.songName} with URL: ${firstSong.url}',
+    );
+
+    try {
+      await firstSong.play();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Successfully started playing: ${firstSong.songName}',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error testing first song: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error playing song: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _search(String query) async {
     final q = query.trim();
     if (q.isEmpty) {
@@ -113,23 +165,28 @@ class _DiscoverPageState extends State<DiscoverPage> {
       debugPrint('Search error: $e');
       if (!mounted) return;
       setState(() => _isSearching = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to perform search')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to perform search')));
     }
   }
 
   Future<void> _togglePlay(Song song) async {
+    if (!mounted) return;
+
     try {
       final mgr = AudioPlayerManager.instance;
       // determine if this exact song is currently playing
-      final isPlayingThis = mgr.currentSong?.songId == song.songId &&
+      final isPlayingThis =
+          mgr.currentSong?.songId == song.songId &&
           (mgr.player.playing == true); // <- adjust if your API differs
 
       if (isPlayingThis) {
         // If it's playing -> pause it
         await song.pause();
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
         return;
       }
 
@@ -140,12 +197,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
       // Start or resume requested song.
       await song.play();
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (e) {
       debugPrint('Play/pause error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to play/pause the track')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to play track: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     }
   }
 
@@ -164,27 +228,36 @@ class _DiscoverPageState extends State<DiscoverPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: strategies.map((entry) {
-              final isSelected = _currentStrategy.runtimeType ==
+              final isSelected =
+                  _currentStrategy.runtimeType ==
                   entry['strategy']!.runtimeType;
 
               return GestureDetector(
                 onTap: () {
-                  setState(() =>
-                      _currentStrategy = entry['strategy'] as SongSearchStrategy);
+                  setState(
+                    () => _currentStrategy =
+                        entry['strategy'] as SongSearchStrategy,
+                  );
                   Navigator.pop(ctx);
                   _search(_searchController.text); // re-run search
                 },
                 child: Container(
                   width: double.infinity,
                   margin: const EdgeInsets.symmetric(vertical: 6),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? KoePalette.shade(
-                            widget.currentTheme.paletteName, 'dark')
+                            widget.currentTheme.paletteName,
+                            'dark',
+                          )
                         : KoePalette.shade(
-                            widget.currentTheme.paletteName, 'light'),
+                            widget.currentTheme.paletteName,
+                            'light',
+                          ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -220,13 +293,17 @@ class _DiscoverPageState extends State<DiscoverPage> {
     final mgr = AudioPlayerManager.instance;
     bool playing = false;
     try {
-      playing = (mgr.currentSong?.songId == song.songId) && (mgr.player.playing == true);
+      playing =
+          (mgr.currentSong?.songId == song.songId) &&
+          (mgr.player.playing == true);
     } catch (_) {
       // Fallback: compare currentSong only if `playing` property absent.
       playing = mgr.currentSong?.songId == song.songId;
     }
 
-    final textColor = widget.currentTheme.isDarkMode ? Colors.white : Colors.black;
+    final textColor = widget.currentTheme.isDarkMode
+        ? Colors.white
+        : Colors.black;
 
     return ListTile(
       tileColor: _paletteMain(),
@@ -301,9 +378,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
     try {
       final userId = widget.listener.id;
       await Artist.subscribe(artistId, userId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Subscribed to artist!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Subscribed to artist!')));
     } catch (e) {
       debugPrint('Subscribe error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -315,9 +392,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
   Future<void> _showAddToPlaylistDialog(Song song) async {
     final playlistIds = widget.listener.playlists ?? [];
     if (playlistIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No playlists available')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No playlists available')));
       return;
     }
 
@@ -365,9 +442,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
     try {
       Playlist pika = Playlist(playlistId: playlistId);
       await pika.addSong(song);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Added to playlist!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Added to playlist!')));
     } catch (e) {
       debugPrint('Add to playlist error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -394,26 +471,45 @@ class _DiscoverPageState extends State<DiscoverPage> {
         // Search bar
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  prefixIcon: IconButton(
+                    icon: _buildStrategyIcon(),
+                    onPressed: _changeSearchStrategy,
+                    tooltip: 'Change search type',
+                  ),
+                ),
+                onChanged: (value) {
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 400), () {
+                    _search(value);
+                  });
+                },
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              prefixIcon: IconButton(
-                icon: _buildStrategyIcon(),
-                onPressed: _changeSearchStrategy,
-                tooltip: 'Change search type',
-              ),
-            ),
-            onChanged: (value) {
-              _debounce?.cancel();
-              _debounce = Timer(const Duration(milliseconds: 400), () {
-                _search(value);
-              });
-            },
+              const SizedBox(height: 8),
+              // Debug button for testing audio
+              if (_showcaseSongs.isNotEmpty)
+                ElevatedButton(
+                  onPressed: () => _testFirstSong(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                  child: const Text('Test Audio (First Song)'),
+                ),
+            ],
           ),
         ),
 

@@ -24,11 +24,7 @@ class DatabaseHelper {
     final directory = await getApplicationDocumentsDirectory();
     final path = join(directory.path, 'music_app.db');
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -99,17 +95,13 @@ class DatabaseHelper {
     ''');
 
     // Seed some data
-    final artist1 = await db.insert('Artist', {
-      'artist_name': 'John Doe',
-    });
+    final artist1 = await db.insert('Artist', {'artist_name': 'John Doe'});
 
-    final artist2 = await db.insert('Artist', {
-      'artist_name': 'NEFFEX',
-    });
+    final artist2 = await db.insert('Artist', {'artist_name': 'NEFFEX'});
 
     await db.insert('Songs', {
       'song_name': 'Sample Song 1',
-      'url': 'https://example.com/song1.mp3',
+      'url': 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
       'duration': '3:45',
       'genre': 'Pop',
       'artist_id': artist1,
@@ -117,7 +109,7 @@ class DatabaseHelper {
 
     await db.insert('Songs', {
       'song_name': 'Another Tune',
-      'url': 'https://example.com/song2.mp3',
+      'url': 'https://www2.cs.uic.edu/~i101/SoundFiles/StarWars60.wav',
       'duration': '4:10',
       'genre': 'Rock',
       'artist_id': artist1,
@@ -133,66 +125,85 @@ class DatabaseHelper {
       'artist_id': artist2,
     });
 
-  int debugUserId;
-  final existingDebug = await db.query(
-    'User',
-    columns: ['user_id'],
-    where: 'user_name = ?',
-    whereArgs: ['a'],
-  );
+    // Create debug user (regular user)
+    int debugUserId;
+    final existingDebug = await db.query(
+      'User',
+      columns: ['user_id'],
+      where: 'user_name = ?',
+      whereArgs: ['a'],
+    );
 
-  if (existingDebug.isNotEmpty) {
-    debugUserId = existingDebug.first['user_id'] as int;
-  } else {
-    debugUserId = await db.insert('User', {
-      'user_name': 'a',
-      'password': 'a',
-      'is_admin': 0,
-    });
+    if (existingDebug.isNotEmpty) {
+      debugUserId = existingDebug.first['user_id'] as int;
+    } else {
+      debugUserId = await db.insert('User', {
+        'user_name': 'a',
+        'password': 'a',
+        'is_admin': 0,
+      });
+    }
+
+    // Create secure admin user (hardcoded credentials)
+    final existingAdmin = await db.query(
+      'User',
+      columns: ['user_id'],
+      where: 'user_name = ?',
+      whereArgs: ['99999999999'],
+    );
+
+    if (existingAdmin.isEmpty) {
+      await db.insert('User', {
+        'user_name': '99999999999',
+        'password': '123456',
+        'is_admin': 1,
+      });
+    }
+
+    // --- seed notifications for debug user 'a' only if none exist (avoids duplicates) ---
+    final countResult = await db.rawQuery(
+      'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
+      [debugUserId],
+    );
+    final existingNotifsCount = countResult.isNotEmpty
+        ? int.tryParse(countResult.first.values.first.toString()) ?? 0
+        : 0;
+
+    if (existingNotifsCount == 0) {
+      await db.insert('Notification', {
+        'user_id': debugUserId,
+        'message': 'Welcome to Koe! Check out our curated playlists.',
+      });
+      await db.insert('Notification', {
+        'user_id': debugUserId,
+        'message': 'New single from The Echoes just dropped — listen now!',
+      });
+      await db.insert('Notification', {
+        'user_id': debugUserId,
+        'message': 'Your playlist "Chill Vibes" reached 100 followers! 🎉',
+      });
+      await db.insert('Notification', {
+        'user_id': debugUserId,
+        'message': 'Concert near you: Luna Park — tickets available.',
+      });
+      await db.insert('Notification', {
+        'user_id': debugUserId,
+        'message': 'Recommended for you: Your Discover mix is ready.',
+      });
+    }
+
+    // optional debug output to verify seeding
+    final afterCountRes = await db.rawQuery(
+      'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
+      [debugUserId],
+    );
+    final notifCount = afterCountRes.isNotEmpty
+        ? int.tryParse(afterCountRes.first.values.first.toString()) ?? 0
+        : 0;
+    debugPrint(
+      'Seeded notifications for debug user "a" (user_id=$debugUserId): $notifCount rows',
+    );
   }
-
-  // --- seed notifications for debug user 'a' only if none exist (avoids duplicates) ---
-  final countResult = await db.rawQuery(
-    'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
-    [debugUserId],
-  );
-  final existingNotifsCount = countResult.isNotEmpty
-      ? int.tryParse(countResult.first.values.first.toString()) ?? 0
-      : 0;
-
-  if (existingNotifsCount == 0) {
-    await db.insert('Notification', {
-      'user_id': debugUserId,
-      'message': 'Welcome to Koe! Check out our curated playlists.',
-    });
-    await db.insert('Notification', {
-      'user_id': debugUserId,
-      'message': 'New single from The Echoes just dropped — listen now!',
-    });
-    await db.insert('Notification', {
-      'user_id': debugUserId,
-      'message': 'Your playlist "Chill Vibes" reached 100 followers! 🎉',
-    });
-    await db.insert('Notification', {
-      'user_id': debugUserId,
-      'message': 'Concert near you: Luna Park — tickets available.',
-    });
-    await db.insert('Notification', {
-      'user_id': debugUserId,
-      'message': 'Recommended for you: Your Discover mix is ready.',
-    });
-  }
-
-  // optional debug output to verify seeding
-  final afterCountRes = await db.rawQuery(
-    'SELECT COUNT(*) AS count FROM Notification WHERE user_id = ?',
-    [debugUserId],
-  );
-  final notifCount = afterCountRes.isNotEmpty
-      ? int.tryParse(afterCountRes.first.values.first.toString()) ?? 0
-      : 0;
-  debugPrint('Seeded notifications for debug user "a" (user_id=$debugUserId): $notifCount rows');
-}
 
   Future<Map<String, dynamic>> idToSong(int songId) async {
     final db = await database;
@@ -210,17 +221,24 @@ class DatabaseHelper {
   }
 
   static Future<List<Map<String, dynamic>>> showcaseSongs(Database db) async {
-  try {
-    final List<Map<String, dynamic>> songs = await db.query(
-      'Songs',
-      columns: ['song_id', 'song_name', 'url', 'duration', 'genre', 'artist_id'],
-      limit: 30,
-    );
+    try {
+      final List<Map<String, dynamic>> songs = await db.query(
+        'Songs',
+        columns: [
+          'song_id',
+          'song_name',
+          'url',
+          'duration',
+          'genre',
+          'artist_id',
+        ],
+        limit: 30,
+      );
 
-    return songs;
-  } catch (e) {
-    debugPrint('Error fetching songs: $e');
-    return [];
+      return songs;
+    } catch (e) {
+      debugPrint('Error fetching songs: $e');
+      return [];
+    }
   }
-}
 }

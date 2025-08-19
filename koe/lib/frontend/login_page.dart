@@ -57,7 +57,9 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         klistener.Listener user = await klistener.Listener.create(userId);
         user.loadAll();
-        debugPrint("loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadeddloaded Loadedd");
+        debugPrint(
+          "loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadedd loaded Loadeddloaded Loadedd",
+        );
         _showSnackbar('Login successful. Welcome!', isError: false);
         Navigator.pushReplacement(
           context,

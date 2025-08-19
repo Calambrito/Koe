@@ -4,16 +4,9 @@ class KoeTheme {
   final KoeColorName paletteName;
   final bool isDarkMode;
 
-  const KoeTheme({
-    required this.paletteName,
-    required this.isDarkMode,
-  });
+  const KoeTheme({required this.paletteName, required this.isDarkMode});
 
-
-  KoeTheme copyWith({
-    KoeColorName? paletteName,
-    bool? isDarkMode,
-  }) {
+  KoeTheme copyWith({KoeColorName? paletteName, bool? isDarkMode}) {
     return KoeTheme(
       paletteName: paletteName ?? this.paletteName,
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -27,5 +20,4 @@ class KoeTheme {
           runtimeType == other.runtimeType &&
           paletteName == other.paletteName &&
           isDarkMode == other.isDarkMode;
-
 }

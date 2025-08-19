@@ -16,10 +16,16 @@ class AdminListenerAdapter {
   // loading by username
   static Future<AdminListenerAdapter> forUserName(String userName) async {
     final db = await DatabaseHelper.getInstance().database;
+
+    // Special handling for admin user - don't convert to lowercase
+    final whereArgs = userName == '99999999999'
+        ? [userName]
+        : [userName.toLowerCase()];
+
     final rows = await db.query(
       'User',
       where: 'user_name = ?',
-      whereArgs: [userName.toLowerCase()],
+      whereArgs: whereArgs,
       limit: 1,
     );
 
@@ -46,5 +52,4 @@ class AdminListenerAdapter {
 
   Future<void> userDeletePlaylist(int playlistId) =>
       _listener.deletePlaylist(playlistId);
-
 }

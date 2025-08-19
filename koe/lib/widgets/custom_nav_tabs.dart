@@ -44,7 +44,12 @@ class CustomNavTabs extends StatelessWidget {
     );
   }
 
-  Widget _buildTabItem(BuildContext context, int index, String label, Color mainColor) {
+  Widget _buildTabItem(
+    BuildContext context,
+    int index,
+    String label,
+    Color mainColor,
+  ) {
     final isSelected = selectedIndex == index;
 
     return Container(
