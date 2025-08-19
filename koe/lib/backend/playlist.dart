@@ -7,7 +7,7 @@ class Playlist {
   String playlistName;
   List<Song> songs = [];
   static final dbHelper = DatabaseHelper.getInstance();
-  
+
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get initialized => _initCompleter.future;
 
@@ -29,9 +29,9 @@ class Playlist {
   Future<void> _loadSongs() async {
     final songIds = await playlistToSong(playlistId);
     songs.clear();
-    
+
     for (int id in songIds) {
-      final songMap = await dbHelper.idToSong(id);
+      final songMap = await dbHelper.idToSongWithArtist(id);
       songs.add(Song.fromMap(songMap));
     }
   }
@@ -50,22 +50,23 @@ class Playlist {
 
   Future<void> addSong(Song song) async {
     songs.add(song);
-    await dbHelper.database.then((db) => db.insert(
-      'Playlist_Songs',
-      {
+    await dbHelper.database.then(
+      (db) => db.insert('Playlist_Songs', {
         'playlist_id': playlistId,
-        'song_id': song.songId
-      },
-    ));
+        'song_id': song.songId,
+      }),
+    );
   }
 
   Future<void> removeSong(Song song) async {
     songs.remove(song);
-    await dbHelper.database.then((db) => db.delete(
-      'Playlist_Songs',
-      where: 'playlist_id = ? AND song_id = ?',
-      whereArgs: [playlistId, song.songId],
-    ));
+    await dbHelper.database.then(
+      (db) => db.delete(
+        'Playlist_Songs',
+        where: 'playlist_id = ? AND song_id = ?',
+        whereArgs: [playlistId, song.songId],
+      ),
+    );
   }
 
   static Future<String> getPlaylistName(int playlistId) async {

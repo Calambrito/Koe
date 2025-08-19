@@ -592,8 +592,8 @@ class _BatchUploadDialogState extends State<BatchUploadDialog> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText:
-                    'John Doe | My Song | 3:45 | https://example.com/song.mp3 | Pop\n'
-                    'Jane Smith | Another Song | 4:20 | https://example.com/song2.mp3 | Rock',
+                    'Artist Name | Song Title | 3:45 | https://example.com/song.mp3 | Pop\n'
+                    'Another Artist | Another Song | 4:20 | https://example.com/song2.mp3 | Rock',
               ),
             ),
             if (_uploadResults != null) ...[

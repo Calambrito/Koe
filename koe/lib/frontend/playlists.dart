@@ -38,11 +38,18 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
   final List<_LocalPlaylist> _localPlaylists = [];
   int _nextTempId = -1;
 
+  Timer? _pollTimer;
+
   @override
   void initState() {
     super.initState();
     // Pre-load all playlists to show names immediately
     _preloadPlaylists();
+
+    // Poll the AudioPlayerManager to keep UI in sync with playback state
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      _refreshPlaybackState();
+    });
   }
 
   Future<void> _preloadPlaylists() async {
@@ -54,6 +61,35 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
       }
     }
     setState(() {});
+  }
+
+  void _refreshPlaybackState() {
+    final mgr = AudioPlayerManager.instance;
+    try {
+      final mgrSong = mgr.currentSong;
+      final isPlaying = mgr.isPlaying;
+
+      // Always force UI refresh to update all song tiles
+      if (mounted) {
+        setState(() {
+          _currentlyPlayingSong = mgrSong;
+        });
+
+        // Force rebuild of all song tiles
+        debugPrint(
+          'Playlists: Forcing UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
+        );
+      }
+
+      // Debug output
+      if (mgrSong != null) {
+        debugPrint(
+          'Playlists: Refresh - Song: ${mgrSong.songName}, Playing: $isPlaying',
+        );
+      }
+    } catch (e) {
+      debugPrint('Playlists: Error in _refreshPlaybackState: $e');
+    }
   }
 
   Future<void> _refreshPlaylistCache(int playlistId) async {
@@ -146,17 +182,167 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
     }
   }
 
-  Widget _buildSongTile(Song song, {int? playlistId}) {
-    final mgr = AudioPlayerManager.instance;
+  Future<void> _playPreviousSong(int? playlistId) async {
+    if (!mounted) return;
 
-    // More robust isPlaying check: both same song AND player.playing == true
-    bool isPlaying = false;
     try {
-      isPlaying =
-          mgr.currentSong?.songId == song.songId &&
-          (mgr.player.playing == true);
-    } catch (_) {
-      isPlaying = mgr.currentSong?.songId == song.songId;
+      // Get songs from the specific playlist
+      if (playlistId == null || playlistId < 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid playlist')));
+        return;
+      }
+
+      final playlist = _playlistsCache[playlistId];
+      if (playlist == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Playlist not found')));
+        return;
+      }
+
+      final songs = playlist.songs;
+      if (songs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No songs in this playlist')),
+        );
+        return;
+      }
+
+      final currentSong = _currentlyPlayingSong;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay(songs.first);
+        return;
+      }
+
+      // Find current song index in this playlist
+      final currentIndex = songs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Current song not found in this playlist'),
+          ),
+        );
+        return;
+      }
+
+      // Calculate previous index
+      final previousIndex = currentIndex > 0
+          ? currentIndex - 1
+          : songs.length - 1;
+      final previousSong = songs[previousIndex];
+
+      // Play the previous song
+      await _togglePlay(previousSong);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playing: ${previousSong.songName}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Previous song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play previous song')),
+        );
+      }
+    }
+  }
+
+  Future<void> _playNextSong(int? playlistId) async {
+    if (!mounted) return;
+
+    try {
+      // Get songs from the specific playlist
+      if (playlistId == null || playlistId < 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid playlist')));
+        return;
+      }
+
+      final playlist = _playlistsCache[playlistId];
+      if (playlist == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Playlist not found')));
+        return;
+      }
+
+      final songs = playlist.songs;
+      if (songs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No songs in this playlist')),
+        );
+        return;
+      }
+
+      final currentSong = _currentlyPlayingSong;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay(songs.first);
+        return;
+      }
+
+      // Find current song index in this playlist
+      final currentIndex = songs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Current song not found in this playlist'),
+          ),
+        );
+        return;
+      }
+
+      // Calculate next index
+      final nextIndex = currentIndex < songs.length - 1 ? currentIndex + 1 : 0;
+      final nextSong = songs[nextIndex];
+
+      // Play the next song
+      await _togglePlay(nextSong);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playing: ${nextSong.songName}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Next song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play next song')),
+        );
+      }
+    }
+  }
+
+  Widget _buildSongTile(Song song, {int? playlistId}) {
+    // Determine playing by asking the audio manager directly for the most reliable state.
+    final mgr = AudioPlayerManager.instance;
+    bool playing = false;
+    try {
+      final isCurrentSong = mgr.currentSong?.songId == song.songId;
+      final isPlayerPlaying = mgr.isPlaying;
+      playing = isCurrentSong && isPlayerPlaying;
+
+      // Debug for the current song
+      if (isCurrentSong) {
+        debugPrint(
+          'Playlists: Building tile for ${song.songName} - isCurrentSong: $isCurrentSong, isPlayerPlaying: $isPlayerPlaying, final playing: $playing',
+        );
+      }
+    } catch (e) {
+      debugPrint('Playlists: Error in _buildSongTile: $e');
+      // Fallback: compare currentSong only if `playing` property absent.
+      playing = mgr.currentSong?.songId == song.songId;
     }
 
     final textColor = Colors.black;
@@ -167,26 +353,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
         song.songName,
         style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
       ),
-      subtitle: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${song.artistName ?? "Unknown artist"} • ${song.genre ?? "Unknown genre"}',
-              style: TextStyle(color: textColor.withOpacity(0.85)),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (song.duration != null)
-            Text(
-              song.duration!,
-              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 12),
-            ),
-        ],
+      subtitle: Text(
+        '${song.artistName ?? "Unknown artist"} • ${song.genre ?? "Unknown genre"}',
+        style: TextStyle(color: textColor.withOpacity(0.85)),
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: IconButton(
         icon: Icon(
-          isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+          playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
         ),
         iconSize: 30,
         onPressed: () => _togglePlay(song),
@@ -260,26 +434,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
 
           return Column(
             children: [
-              // Add Songs button
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: ElevatedButton.icon(
-                  onPressed: () =>
-                      _showAddSongsDialog(playlistId, playlist.playlistName),
-                  icon: const Icon(Icons.add, size: 20),
-                  label: const Text('Add Songs'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-
               // Songs list or empty state
               if (songs.isEmpty)
                 SizedBox(
@@ -434,227 +588,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
         );
       },
     );
-  }
-
-  Future<void> _showAddSongsDialog(int playlistId, String playlistName) async {
-    // Get all available songs
-    List<Song> allSongs = [];
-    try {
-      final songMaps = await Song.getSongs();
-      allSongs = songMaps.map((map) => Song.fromMap(map)).toList();
-    } catch (e) {
-      debugPrint('Error loading songs: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to load songs.')),
-          );
-        }
-      }
-      return;
-    }
-
-    // Force refresh the playlist cache to get the most up-to-date data
-    await _refreshPlaylistCache(playlistId);
-
-    // Get current playlist songs to show which are already added
-    final playlist = _playlistsCache[playlistId];
-    Set<int> existingSongIds = {};
-    if (playlist != null) {
-      try {
-        existingSongIds = playlist.songs.map((s) => s.songId).toSet();
-      } catch (e) {
-        debugPrint('Error getting existing songs: $e');
-        existingSongIds = {};
-      }
-    }
-
-    // Filter out songs that are already in the playlist
-    final availableSongs = allSongs
-        .where((song) => !existingSongIds.contains(song.songId))
-        .toList();
-
-    if (availableSongs.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('All songs are already in this playlist.'),
-            ),
-          );
-        }
-      }
-      return;
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        Set<int> selectedSongIds = {};
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Add songs to "$playlistName"'),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 400,
-                child: Column(
-                  children: [
-                    Text(
-                      'Select songs to add:',
-                      style: TextStyle(
-                        color: widget.currentTheme.isDarkMode
-                            ? Colors.white70
-                            : Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: availableSongs.length,
-                        itemBuilder: (context, index) {
-                          final song = availableSongs[index];
-                          final isSelected = selectedSongIds.contains(
-                            song.songId,
-                          );
-
-                          return CheckboxListTile(
-                            title: Text(
-                              song.songName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              song.artistName ?? 'Unknown artist',
-                              style: TextStyle(
-                                color: widget.currentTheme.isDarkMode
-                                    ? Colors.white70
-                                    : Colors.black54,
-                              ),
-                            ),
-                            value: isSelected,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                if (value == true) {
-                                  selectedSongIds.add(song.songId);
-                                } else {
-                                  selectedSongIds.remove(song.songId);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: selectedSongIds.isEmpty
-                      ? null
-                      : () async {
-                          Navigator.of(ctx).pop();
-                          await _addSongsToPlaylist(
-                            playlistId,
-                            availableSongs
-                                .where(
-                                  (s) => selectedSongIds.contains(s.songId),
-                                )
-                                .toList(),
-                          );
-                        },
-                  child: Text(
-                    'Add ${selectedSongIds.length} song${selectedSongIds.length == 1 ? '' : 's'}',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _addSongsToPlaylist(int playlistId, List<Song> songs) async {
-    if (songs.isEmpty) return;
-
-    final playlist = _playlistsCache[playlistId];
-    if (playlist == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Playlist not found.')));
-      }
-      return;
-    }
-
-    // Show loading feedback
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Adding ${songs.length} song${songs.length == 1 ? '' : 's'} to playlist...',
-            ),
-            duration: const Duration(days: 1),
-          ),
-        );
-      }
-    }
-
-    try {
-      // Add songs to playlist
-      for (final song in songs) {
-        await playlist.addSong(song);
-      }
-
-      // Refresh the playlist cache completely
-      await _refreshPlaylistCache(playlistId);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Added ${songs.length} song${songs.length == 1 ? '' : 's'} to playlist.',
-              ),
-              backgroundColor: _paletteMain(),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('Error adding songs to playlist: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to add songs: ${e.toString()}'),
-              backgroundColor: Colors.red.shade700,
-            ),
-          );
-        }
-      }
-    }
   }
 
   Future<void> _showDeleteSongDialog(int playlistId, Song song) async {
@@ -1081,5 +1014,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 }

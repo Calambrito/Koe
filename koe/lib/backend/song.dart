@@ -64,7 +64,7 @@ class Song {
       // (avoids calling setUrl again which would reset position).
       if (mgr.currentSong?.songId == songId) {
         print('Song.play(): Resuming existing song');
-        await mgr.player.play();
+        await mgr.play();
         return;
       }
 
@@ -72,8 +72,12 @@ class Song {
       print('Song.play(): Loading new song URL');
       mgr.currentSong = this;
       await mgr.setUrl(url);
+
+      // Small delay to ensure the player is ready
+      await Future.delayed(const Duration(milliseconds: 100));
+
       print('Song.play(): Starting playback');
-      await mgr.player.play();
+      await mgr.play();
       print('Song.play(): Playback started successfully');
     } catch (e) {
       print('Song.play(): Error playing song ${songName}: $e');
@@ -88,7 +92,7 @@ class Song {
   Future<void> pause() async {
     try {
       // Pause the player but DO NOT clear currentSong so we can resume from the same position.
-      await AudioPlayerManager.instance.player.pause();
+      await AudioPlayerManager.instance.pause();
       // Do not set currentSong = null here.
     } catch (e) {
       rethrow;

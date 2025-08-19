@@ -24,7 +24,12 @@ class DatabaseHelper {
     final directory = await getApplicationDocumentsDirectory();
     final path = join(directory.path, 'music_app.db');
 
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    final db = await openDatabase(path, version: 1, onCreate: _onCreate);
+
+    // Clean up test data on every app start
+    await _cleanupTestData(db);
+
+    return db;
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -95,25 +100,7 @@ class DatabaseHelper {
     ''');
 
     // Seed some data
-    final artist1 = await db.insert('Artist', {'artist_name': 'John Doe'});
-
     final artist2 = await db.insert('Artist', {'artist_name': 'NEFFEX'});
-
-    await db.insert('Songs', {
-      'song_name': 'Sample Song 1',
-      'url': 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
-      'duration': '3:45',
-      'genre': 'Pop',
-      'artist_id': artist1,
-    });
-
-    await db.insert('Songs', {
-      'song_name': 'Another Tune',
-      'url': 'https://www2.cs.uic.edu/~i101/SoundFiles/StarWars60.wav',
-      'duration': '4:10',
-      'genre': 'Rock',
-      'artist_id': artist1,
-    });
 
     // FIXED: artist_id must be the integer id (artist2), not a string.
     await db.insert('Songs', {
@@ -205,6 +192,67 @@ class DatabaseHelper {
     );
   }
 
+  // Clean up test songs and artists
+  Future<void> _cleanupTestData(Database db) async {
+    try {
+      // Check what test songs exist before deletion
+      final testSongs = await db.query(
+        'Songs',
+        where: 'song_name IN (?, ?)',
+        whereArgs: ['Sample Song 1', 'Another Tune'],
+      );
+
+      if (testSongs.isNotEmpty) {
+        debugPrint(
+          'Found ${testSongs.length} test songs to remove: ${testSongs.map((s) => s['song_name']).toList()}',
+        );
+      }
+
+      // Remove test songs
+      final deletedSongs = await db.delete(
+        'Songs',
+        where: 'song_name IN (?, ?)',
+        whereArgs: ['Sample Song 1', 'Another Tune'],
+      );
+
+      // Remove John Doe artist (and any songs by John Doe)
+      final johnDoeArtists = await db.query(
+        'Artist',
+        columns: ['artist_id'],
+        where: 'artist_name = ?',
+        whereArgs: ['John Doe'],
+      );
+
+      for (final artist in johnDoeArtists) {
+        final artistId = artist['artist_id'] as int;
+
+        // Remove songs by John Doe
+        final deletedJohnDoeSongs = await db.delete(
+          'Songs',
+          where: 'artist_id = ?',
+          whereArgs: [artistId],
+        );
+
+        // Remove John Doe artist
+        final deletedArtist = await db.delete(
+          'Artist',
+          where: 'artist_id = ?',
+          whereArgs: [artistId],
+        );
+
+        debugPrint(
+          'Removed John Doe artist (ID: $artistId) and $deletedJohnDoeSongs associated songs',
+        );
+      }
+
+      debugPrint(
+        'Database cleanup completed. Removed $deletedSongs test songs.',
+      );
+    } catch (e) {
+      debugPrint('Error cleaning up test data: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> idToSong(int songId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -220,20 +268,49 @@ class DatabaseHelper {
     }
   }
 
+  Future<Map<String, dynamic>> idToSongWithArtist(int songId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
+      SELECT 
+        s.song_id,
+        s.song_name,
+        s.url,
+        s.duration,
+        s.genre,
+        s.artist_id,
+        a.artist_name
+      FROM Songs s
+      LEFT JOIN Artist a ON s.artist_id = a.artist_id
+      WHERE s.song_id = ?
+    ''',
+      [songId],
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first;
+    } else {
+      throw Exception('Song with ID $songId not found');
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> showcaseSongs(Database db) async {
     try {
-      final List<Map<String, dynamic>> songs = await db.query(
-        'Songs',
-        columns: [
-          'song_id',
-          'song_name',
-          'url',
-          'duration',
-          'genre',
-          'artist_id',
-        ],
-        limit: 30,
-      );
+      // Use a JOIN to get artist names along with song data
+      final List<Map<String, dynamic>> songs = await db.rawQuery('''
+        SELECT 
+          s.song_id,
+          s.song_name,
+          s.url,
+          s.duration,
+          s.genre,
+          s.artist_id,
+          a.artist_name
+        FROM Songs s
+        LEFT JOIN Artist a ON s.artist_id = a.artist_id
+        ORDER BY s.song_id DESC
+        LIMIT 30
+      ''');
 
       return songs;
     } catch (e) {

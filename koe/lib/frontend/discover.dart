@@ -44,27 +44,37 @@ class _DiscoverPageState extends State<DiscoverPage> {
     // Poll the AudioPlayerManager to keep UI in sync with playback state.
     // This is defensive: if your audio lib provides a state stream, you can
     // replace this with a subscription for better efficiency.
-    _pollTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
       _refreshPlaybackState();
     });
-
-    // Test audio URLs on startup
-    _testAudioUrls();
   }
 
   void _refreshPlaybackState() {
     final mgr = AudioPlayerManager.instance;
     try {
       final mgrSong = mgr.currentSong;
-      // Only call setState when something changed to avoid excessive rebuilds.
-      final changed = (mgrSong?.songId != _currentlyPlayingSong?.songId);
-      if (changed) {
+      final isPlaying = mgr.isPlaying;
+
+      // Always force UI refresh to update all song tiles
+      if (mounted) {
         setState(() {
           _currentlyPlayingSong = mgrSong;
         });
+
+        // Force rebuild of all song tiles
+        debugPrint(
+          'Discover: Forcing UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
+        );
       }
-    } catch (_) {
-      // If something goes wrong reading the player, ignore — don't crash UI.
+
+      // Debug output
+      if (mgrSong != null) {
+        debugPrint(
+          'Discover: Refresh - Song: ${mgrSong.songName}, Playing: $isPlaying',
+        );
+      }
+    } catch (e) {
+      debugPrint('Discover: Error in _refreshPlaybackState: $e');
     }
   }
 
@@ -91,55 +101,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
       });
     } catch (e) {
       debugPrint("Error loading showcase songs: $e");
-    }
-  }
-
-  Future<void> _testAudioUrls() async {
-    debugPrint('Testing audio URLs...');
-    for (final song in _showcaseSongs) {
-      debugPrint('Song: ${song.songName}, URL: ${song.url}');
-    }
-  }
-
-  Future<void> _testFirstSong() async {
-    if (!mounted) return;
-
-    if (_showcaseSongs.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No songs available to test')),
-        );
-      }
-      return;
-    }
-
-    final firstSong = _showcaseSongs.first;
-    debugPrint(
-      'Testing first song: ${firstSong.songName} with URL: ${firstSong.url}',
-    );
-
-    try {
-      await firstSong.play();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Successfully started playing: ${firstSong.songName}',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error testing first song: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error playing song: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
     }
   }
 
@@ -208,6 +169,122 @@ class _DiscoverPageState extends State<DiscoverPage> {
             content: Text('Unable to play track: ${e.toString()}'),
             duration: const Duration(seconds: 5),
           ),
+        );
+      }
+    }
+  }
+
+  Future<void> _playPreviousSong() async {
+    if (!mounted) return;
+
+    try {
+      // Get current song list (showcase or search results)
+      final currentSongs = _searchController.text.trim().isEmpty
+          ? _showcaseSongs
+          : _searchResults;
+
+      if (currentSongs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No songs available')));
+        return;
+      }
+
+      final currentSong = _currentlyPlayingSong;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay(currentSongs.first);
+        return;
+      }
+
+      // Find current song index
+      final currentIndex = currentSongs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Current song not found in list')),
+        );
+        return;
+      }
+
+      // Calculate previous index
+      final previousIndex = currentIndex > 0
+          ? currentIndex - 1
+          : currentSongs.length - 1;
+      final previousSong = currentSongs[previousIndex];
+
+      // Play the previous song
+      await _togglePlay(previousSong);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playing: ${previousSong.songName}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Previous song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play previous song')),
+        );
+      }
+    }
+  }
+
+  Future<void> _playNextSong() async {
+    if (!mounted) return;
+
+    try {
+      // Get current song list (showcase or search results)
+      final currentSongs = _searchController.text.trim().isEmpty
+          ? _showcaseSongs
+          : _searchResults;
+
+      if (currentSongs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No songs available')));
+        return;
+      }
+
+      final currentSong = _currentlyPlayingSong;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay(currentSongs.first);
+        return;
+      }
+
+      // Find current song index
+      final currentIndex = currentSongs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Current song not found in list')),
+        );
+        return;
+      }
+
+      // Calculate next index
+      final nextIndex = currentIndex < currentSongs.length - 1
+          ? currentIndex + 1
+          : 0;
+      final nextSong = currentSongs[nextIndex];
+
+      // Play the next song
+      await _togglePlay(nextSong);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Playing: ${nextSong.songName}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Next song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play next song')),
         );
       }
     }
@@ -289,55 +366,58 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Widget _buildSongTile(Song song) {
-    // Determine playing by asking the audio manager directly for the most reliable state.
+    // Use the cached current song and audio manager for the most reliable state
     final mgr = AudioPlayerManager.instance;
     bool playing = false;
     try {
-      playing =
-          (mgr.currentSong?.songId == song.songId) &&
-          (mgr.player.playing == true);
-    } catch (_) {
+      // Check if this is the currently playing song
+      final isCurrentSong = _currentlyPlayingSong?.songId == song.songId;
+      final isPlayerPlaying = mgr.isPlaying;
+      playing = isCurrentSong && isPlayerPlaying;
+
+      // Debug for the current song
+      if (isCurrentSong) {
+        debugPrint(
+          'Discover: Building tile for ${song.songName} - isCurrentSong: $isCurrentSong, isPlayerPlaying: $isPlayerPlaying, final playing: $playing',
+        );
+      }
+    } catch (e) {
+      debugPrint('Discover: Error in _buildSongTile: $e');
       // Fallback: compare currentSong only if `playing` property absent.
-      playing = mgr.currentSong?.songId == song.songId;
+      playing = _currentlyPlayingSong?.songId == song.songId;
     }
 
     final textColor = widget.currentTheme.isDarkMode
         ? Colors.white
         : Colors.black;
 
-    return ListTile(
-      tileColor: _paletteMain(),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      title: Text(
-        song.songName,
-        style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _paletteMain(),
+        borderRadius: BorderRadius.circular(12),
       ),
-      subtitle: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${song.artistName ?? "Unknown artist"} • ${song.genre ?? "Unknown genre"}',
-              style: TextStyle(color: textColor.withOpacity(0.85)),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (song.duration != null)
-            Text(
-              song.duration!,
-              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 12),
-            ),
-        ],
-      ),
-      trailing: IconButton(
-        icon: Icon(
-          playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        title: Text(
+          song.songName,
+          style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
         ),
-        iconSize: 30,
-        onPressed: () => _togglePlay(song),
+        subtitle: Text(
+          '${song.artistName ?? "Unknown artist"} • ${song.genre ?? "Unknown genre"}',
+          style: TextStyle(color: textColor.withOpacity(0.85)),
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
+          ),
+          iconSize: 30,
+          onPressed: () => _togglePlay(song),
+        ),
+        onTap: () => _togglePlay(song),
+        onLongPress: () => _showSongOptions(song),
       ),
-      onTap: () => _togglePlay(song),
-      onLongPress: () => _showSongOptions(song),
     );
   }
 
@@ -494,21 +574,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   });
                 },
               ),
-              const SizedBox(height: 8),
-              // Debug button for testing audio
-              if (_showcaseSongs.isNotEmpty)
-                ElevatedButton(
-                  onPressed: () => _testFirstSong(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                  ),
-                  child: const Text('Test Audio (First Song)'),
-                ),
             ],
           ),
         ),

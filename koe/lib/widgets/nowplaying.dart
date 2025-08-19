@@ -88,6 +88,141 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
     }
   }
 
+  Future<void> _playPreviousSong() async {
+    if (!mounted) return;
+
+    try {
+      // Get all available songs from the database
+      final songMaps = await Song.getSongs();
+      final allSongs = songMaps.map((map) => Song.fromMap(map)).toList();
+
+      if (allSongs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No songs available')));
+        return;
+      }
+
+      final currentSong = _song;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay();
+        return;
+      }
+
+      // Find current song index
+      final currentIndex = allSongs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Current song not found')));
+        return;
+      }
+
+      // Calculate previous index
+      final previousIndex = currentIndex > 0
+          ? currentIndex - 1
+          : allSongs.length - 1;
+      final previousSong = allSongs[previousIndex];
+
+      // Play the previous song
+      await previousSong.play();
+      _refreshState();
+    } catch (e) {
+      debugPrint('Previous song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play previous song')),
+        );
+      }
+    }
+  }
+
+  Future<void> _playNextSong() async {
+    if (!mounted) return;
+
+    try {
+      // Get all available songs from the database
+      final songMaps = await Song.getSongs();
+      final allSongs = songMaps.map((map) => Song.fromMap(map)).toList();
+
+      if (allSongs.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No songs available')));
+        return;
+      }
+
+      final currentSong = _song;
+      if (currentSong == null) {
+        // If no song is playing, play the first song
+        await _togglePlay();
+        return;
+      }
+
+      // Find current song index
+      final currentIndex = allSongs.indexWhere(
+        (s) => s.songId == currentSong.songId,
+      );
+      if (currentIndex == -1) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Current song not found')));
+        return;
+      }
+
+      // Calculate next index
+      final nextIndex = currentIndex < allSongs.length - 1
+          ? currentIndex + 1
+          : 0;
+      final nextSong = allSongs[nextIndex];
+
+      // Play the next song
+      await nextSong.play();
+      _refreshState();
+    } catch (e) {
+      debugPrint('Next song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to play next song')),
+        );
+      }
+    }
+  }
+
+  Future<void> _restartSong() async {
+    if (!mounted || _song == null) return;
+
+    try {
+      final mgr = AudioPlayerManager.instance;
+
+      // Check if the current song is playing
+      final isCurrentSong = mgr.currentSong?.songId == _song!.songId;
+
+      if (isCurrentSong) {
+        // If it's the current song, seek to beginning and play
+        await mgr.player.seek(Duration.zero);
+        if (!mgr.player.playing) {
+          await mgr.player.play();
+        }
+      } else {
+        // If it's not the current song, restart it from beginning
+        await _song!.play();
+      }
+
+      _refreshState();
+    } catch (e) {
+      debugPrint('Restart song error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Unable to restart song')));
+      }
+    }
+  }
+
   @override
   void dispose() {
     _pollTimer?.cancel();
@@ -177,27 +312,25 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
                     ),
                   ),
 
-                  // Time display
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_formatDuration(_currentPosition)} / ${_formatDuration(_duration)}',
-                      style: const TextStyle(
+                  // Previous button
+                  GestureDetector(
+                    onTap: _playPreviousSong,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        Icons.skip_previous,
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        size: 24,
                       ),
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
 
                   // Play/pause button
                   GestureDetector(
@@ -214,6 +347,42 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
                         color: paletteMain,
                         size: 28,
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Next button
+                  GestureDetector(
+                    onTap: _playNextSong,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        Icons.skip_next,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Restart button
+                  GestureDetector(
+                    onTap: _restartSong,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(Icons.replay, color: Colors.white, size: 24),
                     ),
                   ),
                 ],
