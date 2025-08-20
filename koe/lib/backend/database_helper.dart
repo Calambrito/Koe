@@ -102,7 +102,7 @@ class DatabaseHelper {
     // Seed some data
     final artist2 = await db.insert('Artist', {'artist_name': 'NEFFEX'});
 
-    // FIXED: artist_id must be the integer id (artist2), not a string.
+    // Add original song
     await db.insert('Songs', {
       'song_name': 'As You Fade Away',
       'url':
@@ -198,8 +198,14 @@ class DatabaseHelper {
       // Check what test songs exist before deletion
       final testSongs = await db.query(
         'Songs',
-        where: 'song_name IN (?, ?)',
-        whereArgs: ['Sample Song 1', 'Another Tune'],
+        where: 'song_name IN (?, ?, ?, ?, ?)',
+        whereArgs: [
+          'Sample Song 1',
+          'Another Tune',
+          'Test Song - Working Audio',
+          'Notification Sound',
+          'Chime Sound',
+        ],
       );
 
       if (testSongs.isNotEmpty) {
@@ -211,8 +217,14 @@ class DatabaseHelper {
       // Remove test songs
       final deletedSongs = await db.delete(
         'Songs',
-        where: 'song_name IN (?, ?)',
-        whereArgs: ['Sample Song 1', 'Another Tune'],
+        where: 'song_name IN (?, ?, ?, ?, ?)',
+        whereArgs: [
+          'Sample Song 1',
+          'Another Tune',
+          'Test Song - Working Audio',
+          'Notification Sound',
+          'Chime Sound',
+        ],
       );
 
       // Remove John Doe artist (and any songs by John Doe)

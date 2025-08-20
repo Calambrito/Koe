@@ -85,7 +85,20 @@ class Song {
       if (AudioPlayerManager.instance.currentSong?.songId == songId) {
         AudioPlayerManager.instance.currentSong = null;
       }
-      rethrow;
+
+      // Provide more user-friendly error message
+      String errorMessage = 'Failed to play song';
+      if (e.toString().contains('404')) {
+        errorMessage = 'Audio file not found';
+      } else if (e.toString().contains('CORS')) {
+        errorMessage = 'Audio source not accessible';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Connection timeout';
+      } else if (e.toString().contains('Invalid URL')) {
+        errorMessage = 'Invalid audio URL';
+      }
+
+      throw Exception('$errorMessage: ${songName}');
     }
   }
 

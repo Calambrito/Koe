@@ -25,11 +25,30 @@ class AudioPlayerManager {
   Future<void> setUrl(String url) async {
     try {
       print('AudioPlayerManager: Setting URL: $url');
+
+      // Check if URL is accessible
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        throw Exception('Invalid URL format: $url');
+      }
+
       await _player.setUrl(url);
       print('AudioPlayerManager: URL set successfully');
     } catch (e) {
       print('AudioPlayerManager: Error setting URL $url: $e');
-      rethrow;
+      // Provide more specific error messages
+      if (e.toString().contains('404')) {
+        throw Exception('Audio file not found. Please check the URL.');
+      } else if (e.toString().contains('CORS')) {
+        throw Exception(
+          'CORS error. The audio source does not allow cross-origin access.',
+        );
+      } else if (e.toString().contains('timeout')) {
+        throw Exception(
+          'Connection timeout. Please check your internet connection.',
+        );
+      } else {
+        throw Exception('Failed to load audio: ${e.toString()}');
+      }
     }
   }
 

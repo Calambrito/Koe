@@ -7,6 +7,7 @@ class SettingsPanel extends StatelessWidget {
   final void Function(KoeTheme) updateTheme;
   final VoidCallback saveSettings;
   final VoidCallback logout;
+  final VoidCallback? onSubscriptionsTap;
 
   const SettingsPanel({
     super.key,
@@ -14,6 +15,7 @@ class SettingsPanel extends StatelessWidget {
     required this.updateTheme,
     required this.saveSettings,
     required this.logout,
+    this.onSubscriptionsTap,
   });
 
   @override
@@ -108,6 +110,13 @@ class SettingsPanel extends StatelessWidget {
 
                             // Color Palette
                             _buildColorPalette(isDark, mainColor),
+                            const SizedBox(height: 32),
+
+                            // Subscriptions Button
+                            if (onSubscriptionsTap != null) ...[
+                              _buildSubscriptionsButton(isDark, mainColor),
+                              const SizedBox(height: 32),
+                            ],
 
                             // Spacer to push logout to bottom
                             const Spacer(),
@@ -302,6 +311,40 @@ class SettingsPanel extends StatelessWidget {
             child: _buildPaletteOption(KoeColorName.values[index], mainColor),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionsButton(bool isDark, Color mainColor) {
+    return GestureDetector(
+      onTap: onSubscriptionsTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.subscriptions, color: mainColor, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              'My Subscriptions',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey.shade400,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }

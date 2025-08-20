@@ -47,7 +47,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
     _preloadPlaylists();
 
     // Poll the AudioPlayerManager to keep UI in sync with playback state
-    _pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       _refreshPlaybackState();
     });
   }
@@ -63,29 +63,34 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
     setState(() {});
   }
 
+  Song? _lastKnownSong;
+  bool _lastKnownPlayingState = false;
+
   void _refreshPlaybackState() {
     final mgr = AudioPlayerManager.instance;
     try {
       final mgrSong = mgr.currentSong;
       final isPlaying = mgr.isPlaying;
 
-      // Always force UI refresh to update all song tiles
-      if (mounted) {
-        setState(() {
-          _currentlyPlayingSong = mgrSong;
-        });
+      // Only refresh if the state actually changed
+      // Compare song IDs instead of objects for more reliable comparison
+      final currentSongId = mgrSong?.songId;
+      final lastKnownSongId = _lastKnownSong?.songId;
 
-        // Force rebuild of all song tiles
-        debugPrint(
-          'Playlists: Forcing UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
-        );
-      }
+      if (currentSongId != lastKnownSongId ||
+          _lastKnownPlayingState != isPlaying) {
+        _lastKnownSong = mgrSong;
+        _lastKnownPlayingState = isPlaying;
 
-      // Debug output
-      if (mgrSong != null) {
-        debugPrint(
-          'Playlists: Refresh - Song: ${mgrSong.songName}, Playing: $isPlaying',
-        );
+        if (mounted) {
+          setState(() {
+            _currentlyPlayingSong = mgrSong;
+          });
+
+          debugPrint(
+            'Playlists: UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
+          );
+        }
       }
     } catch (e) {
       debugPrint('Playlists: Error in _refreshPlaybackState: $e');

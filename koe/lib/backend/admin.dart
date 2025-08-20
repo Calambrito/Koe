@@ -4,6 +4,7 @@ import 'song.dart';
 import 'theme.dart';
 import 'discover.dart';
 import 'listener.dart';
+import 'artist.dart';
 
 class Admin {
   final AdminListenerAdapter _adapter;
@@ -87,28 +88,16 @@ class Admin {
     return songId;
   }
 
-  // Send notification to all users when a new song is uploaded
+  // Send notification to subscribers when a new song is uploaded
   Future<void> _sendNewSongNotification(
     String songName,
     String artistName,
   ) async {
-    final db = await dbHelper.database;
+    // Create an Artist instance to get subscribers
+    final artist = await Artist.create(artistName);
 
-    // Get all users (excluding admin)
-    final users = await db.query(
-      'User',
-      where: 'user_name != ?',
-      whereArgs: ['99999999999'], // Exclude admin user
-    );
-
-    // Create notification message
-    final message = '"$songName" is added, Stream it now!';
-
-    // Send notification to all users
-    for (final user in users) {
-      final userId = user['user_id'] as int;
-      await db.insert('Notification', {'user_id': userId, 'message': message});
-    }
+    // Send notification only to subscribers of this artist
+    await artist.sendNewSongNotification(songName);
   }
 
   Future<List<Map<String, dynamic>>> batchAddSongs(
@@ -193,6 +182,18 @@ class Admin {
         }
       }
     });
+
+    // Send notifications to subscribers for each successfully added song
+    for (final result in results) {
+      if (result['success'] == true) {
+        final songName = result['songName'] as String;
+        final artistName = result['artistName'] as String;
+
+        // Send notification to subscribers of this artist
+        final artist = await Artist.create(artistName);
+        await artist.sendNewSongNotification(songName);
+      }
+    }
 
     return results;
   }

@@ -6,12 +6,9 @@ class Artist {
   final String artistName;
   static final dbHelper = DatabaseHelper.getInstance();
 
-  Artist(this.artistName) {
-    _initialize();
-  }
+  Artist._(this.artistName, this.artistId);
 
-  
-  Future<void> _initialize() async {
+  static Future<Artist> create(String artistName) async {
     final db = await dbHelper.database;
     final result = await db.query(
       'Artist',
@@ -21,40 +18,44 @@ class Artist {
       limit: 1,
     );
 
+    int artistId;
     if (result.isNotEmpty) {
       artistId = result.first['artist_id'] as int;
     } else {
-      artistId = await _createNewArtist();
+      artistId = await _createNewArtist(artistName);
     }
+
+    return Artist._(artistName, artistId);
   }
 
-  Future<int> _createNewArtist() async {
+  static Future<int> _createNewArtist(String artistName) async {
     final db = await dbHelper.database;
     return await db.insert('Artist', {'artist_name': artistName});
   }
 
-  
   Future<List<ProxyListener>> getSubscribers() async {
-  final db = await dbHelper.database;
-  final subscriptions = await db.query(
-    'Subscription',
-    where: 'artist_id = ?',
-    whereArgs: [artistId],
-  );
+    final db = await dbHelper.database;
+    final subscriptions = await db.query(
+      'Subscription',
+      where: 'artist_id = ?',
+      whereArgs: [artistId],
+    );
 
-  final subscribers = <ProxyListener>[];
-  for (final sub in subscriptions) {
-    final userId = sub['user_id'] as int;
-    final proxy = await ProxyListener.create(userId);
-    subscribers.add(proxy);
+    final subscribers = <ProxyListener>[];
+    for (final sub in subscriptions) {
+      final userId = sub['user_id'] as int;
+      final proxy = await ProxyListener.create(userId);
+      subscribers.add(proxy);
+    }
+
+    return subscribers;
   }
 
-  return subscribers;
-}
-
-  Future<void> sendNewSongNotification() async {
+  Future<void> sendNewSongNotification([String? songName]) async {
     final subscribers = await getSubscribers();
-    final message = '$artistName has uploaded a new song';
+    final message = songName != null
+        ? '"$songName" by $artistName is added, Stream it now!'
+        : '$artistName has uploaded a new song';
 
     for (final listener in subscribers) {
       await listener.addNotification(message);
@@ -63,19 +64,6 @@ class Artist {
 
   static Future<void> subscribe(int artistId, int userId) async {
     final db = await dbHelper.database;
-    await db.insert(
-      'Subscription',
-      {
-        'artist_id': artistId,
-        'user_id': userId,
-      },
-    );
+    await db.insert('Subscription', {'artist_id': artistId, 'user_id': userId});
   }
 }
-
-
-
-
-
-
-

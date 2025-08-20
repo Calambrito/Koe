@@ -9,6 +9,7 @@ import '../widgets/custom_nav_tabs.dart';
 import 'notifications.dart';
 import 'playlists.dart';
 import 'discover.dart';
+import 'subscriptions.dart';
 import '../widgets/nowplaying.dart'; // <-- new import
 
 class UserPortal extends StatefulWidget {
@@ -45,6 +46,18 @@ class _UserPortalState extends State<UserPortal> {
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
       (route) => false,
+    );
+  }
+
+  void _openSubscriptions() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SubscriptionsPage(
+          listener: widget.listener,
+          currentTheme: _currentTheme,
+        ),
+      ),
     );
   }
 
@@ -181,6 +194,7 @@ class _UserPortalState extends State<UserPortal> {
                 updateTheme: _updateTheme,
                 saveSettings: _saveSettings,
                 logout: _logout,
+                onSubscriptionsTap: _openSubscriptions,
               ),
             ),
 

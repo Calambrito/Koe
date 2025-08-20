@@ -44,10 +44,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
     // Poll the AudioPlayerManager to keep UI in sync with playback state.
     // This is defensive: if your audio lib provides a state stream, you can
     // replace this with a subscription for better efficiency.
-    _pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       _refreshPlaybackState();
     });
   }
+
+  Song? _lastKnownSong;
+  bool _lastKnownPlayingState = false;
 
   void _refreshPlaybackState() {
     final mgr = AudioPlayerManager.instance;
@@ -55,23 +58,25 @@ class _DiscoverPageState extends State<DiscoverPage> {
       final mgrSong = mgr.currentSong;
       final isPlaying = mgr.isPlaying;
 
-      // Always force UI refresh to update all song tiles
-      if (mounted) {
-        setState(() {
-          _currentlyPlayingSong = mgrSong;
-        });
+      // Only refresh if the state actually changed
+      // Compare song IDs instead of objects for more reliable comparison
+      final currentSongId = mgrSong?.songId;
+      final lastKnownSongId = _lastKnownSong?.songId;
 
-        // Force rebuild of all song tiles
-        debugPrint(
-          'Discover: Forcing UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
-        );
-      }
+      if (currentSongId != lastKnownSongId ||
+          _lastKnownPlayingState != isPlaying) {
+        _lastKnownSong = mgrSong;
+        _lastKnownPlayingState = isPlaying;
 
-      // Debug output
-      if (mgrSong != null) {
-        debugPrint(
-          'Discover: Refresh - Song: ${mgrSong.songName}, Playing: $isPlaying',
-        );
+        if (mounted) {
+          setState(() {
+            _currentlyPlayingSong = mgrSong;
+          });
+
+          debugPrint(
+            'Discover: UI refresh - Current song: ${mgrSong?.songName}, Playing: $isPlaying',
+          );
+        }
       }
     } catch (e) {
       debugPrint('Discover: Error in _refreshPlaybackState: $e');
@@ -439,12 +444,29 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 },
               ),
               if (song.artistId != null)
-                ListTile(
-                  leading: const Icon(Icons.person_add),
-                  title: const Text('Subscribe to artist'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _subscribeToArtist(song.artistId!);
+                FutureBuilder<bool>(
+                  future: widget.listener.isSubscribedToArtist(song.artistId!),
+                  builder: (context, snapshot) {
+                    final isSubscribed = snapshot.data ?? false;
+                    return ListTile(
+                      leading: Icon(
+                        isSubscribed ? Icons.person_remove : Icons.person_add,
+                        color: isSubscribed ? Colors.red : null,
+                      ),
+                      title: Text(
+                        isSubscribed
+                            ? 'Unsubscribe from artist'
+                            : 'Subscribe to artist',
+                      ),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        if (isSubscribed) {
+                          _unsubscribeFromArtist(song.artistId!);
+                        } else {
+                          _subscribeToArtist(song.artistId!);
+                        }
+                      },
+                    );
                   },
                 ),
             ],
@@ -465,6 +487,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
       debugPrint('Subscribe error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to subscribe to artist')),
+      );
+    }
+  }
+
+  Future<void> _unsubscribeFromArtist(int artistId) async {
+    try {
+      final success = await widget.listener.unsubscribeFromArtist(artistId);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unsubscribed from artist')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to unsubscribe from artist')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Unsubscribe error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to unsubscribe from artist')),
       );
     }
   }
