@@ -3,6 +3,7 @@ import 'database_helper.dart';
 import 'song.dart';
 import 'theme.dart';
 import 'discover.dart';
+import 'listener.dart';
 
 class Admin {
   final AdminListenerAdapter _adapter;
@@ -26,6 +27,9 @@ class Admin {
   String get username => _adapter.username;
   String get name => _adapter.username;
   KoeTheme get theme => _adapter.theme;
+
+  // Expose the underlying Listener for UI compatibility
+  Listener get listener => _adapter.listener;
 
   // Implement Listener-like methods for UI compatibility
   List<int> get playlists => _adapter.playlists;

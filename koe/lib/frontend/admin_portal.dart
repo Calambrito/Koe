@@ -8,6 +8,8 @@ import '../widgets/nowplaying.dart';
 import '../widgets/admin_nav_tabs.dart';
 import '../widgets/settings_panel.dart';
 import 'login_page.dart';
+import 'playlists.dart';
+import 'discover.dart';
 
 class AdminPortal extends StatefulWidget {
   final Admin admin;
@@ -72,6 +74,20 @@ class _AdminPortalState extends State<AdminPortal> {
     setState(() {
       _currentTheme = theme;
     });
+  }
+
+  Widget _buildPlaylistsPage() {
+    return PlaylistsPage(
+      listener: widget.admin.listener,
+      currentTheme: _currentTheme,
+    );
+  }
+
+  Widget _buildDiscoverPage() {
+    return DiscoverPage(
+      listener: widget.admin.listener,
+      currentTheme: _currentTheme,
+    );
   }
 
   @override
@@ -189,41 +205,15 @@ class _AdminPortalState extends State<AdminPortal> {
           ),
         ],
       ),
-      floatingActionButton: _selectedTabIndex == 3
-          ? FloatingActionButton(
-              onPressed: _showUploadDialog,
-              backgroundColor: KoePalette.shade(
-                _currentTheme.paletteName,
-                'main',
-              ),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
     );
   }
 
   Widget _buildTabContent() {
     switch (_selectedTabIndex) {
       case 0:
-        return Center(
-          child: Text(
-            'Playlists Page - Admin View',
-            style: TextStyle(
-              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
-              fontSize: 18,
-            ),
-          ),
-        );
+        return _buildPlaylistsPage();
       case 1:
-        return Center(
-          child: Text(
-            'Discover Page - Admin View',
-            style: TextStyle(
-              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
-              fontSize: 18,
-            ),
-          ),
-        );
+        return _buildDiscoverPage();
       case 2:
         return Center(
           child: Text(

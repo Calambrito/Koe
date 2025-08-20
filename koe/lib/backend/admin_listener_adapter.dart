@@ -43,6 +43,9 @@ class AdminListenerAdapter {
   String get username => _listener.username;
   KoeTheme get theme => _listener.theme;
 
+  // Expose the underlying Listener for UI compatibility
+  Listener get listener => _listener;
+
   List<int> get playlists => _listener.playlists;
   List<String> get notifications => _listener.notifications;
 
