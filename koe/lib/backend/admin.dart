@@ -81,7 +81,34 @@ class Admin {
       'artist_id': artistId,
     });
 
+    // Send notification to all users about the new song
+    await _sendNewSongNotification(songName, artistName);
+
     return songId;
+  }
+
+  // Send notification to all users when a new song is uploaded
+  Future<void> _sendNewSongNotification(
+    String songName,
+    String artistName,
+  ) async {
+    final db = await dbHelper.database;
+
+    // Get all users (excluding admin)
+    final users = await db.query(
+      'User',
+      where: 'user_name != ?',
+      whereArgs: ['99999999999'], // Exclude admin user
+    );
+
+    // Create notification message
+    final message = '"$songName" is added, Stream it now!';
+
+    // Send notification to all users
+    for (final user in users) {
+      final userId = user['user_id'] as int;
+      await db.insert('Notification', {'user_id': userId, 'message': message});
+    }
   }
 
   Future<List<Map<String, dynamic>>> batchAddSongs(

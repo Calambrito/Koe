@@ -10,6 +10,7 @@ import '../widgets/settings_panel.dart';
 import 'login_page.dart';
 import 'playlists.dart';
 import 'discover.dart';
+import 'notifications.dart';
 
 class AdminPortal extends StatefulWidget {
   final Admin admin;
@@ -215,14 +216,9 @@ class _AdminPortalState extends State<AdminPortal> {
       case 1:
         return _buildDiscoverPage();
       case 2:
-        return Center(
-          child: Text(
-            'Notifications Page - Admin View',
-            style: TextStyle(
-              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
-              fontSize: 18,
-            ),
-          ),
+        return NotificationsPage(
+          listener: widget.admin.listener,
+          currentTheme: _currentTheme,
         );
       case 3:
         return _buildSongManagementTab();
