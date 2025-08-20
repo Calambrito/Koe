@@ -102,6 +102,10 @@ class SettingsPanel extends StatelessWidget {
                             _buildThemeToggle(isDark, mainColor),
                             const SizedBox(height: 32),
 
+                            // Current Color Palette Display
+                            _buildCurrentColorDisplay(isDark, mainColor),
+                            const SizedBox(height: 16),
+
                             // Color Palette
                             _buildColorPalette(isDark, mainColor),
 
@@ -229,15 +233,72 @@ class SettingsPanel extends StatelessWidget {
     );
   }
 
+  Widget _buildCurrentColorDisplay(bool isDark, Color mainColor) {
+    final currentColors = KoePalette.get(currentTheme.paletteName);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          // Current color preview
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  currentColors['light']!,
+                  currentColors['main']!,
+                  currentColors['dark']!,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current Theme',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                  ),
+                ),
+                Text(
+                  currentTheme.paletteName.name.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildColorPalette(bool isDark, Color mainColor) {
     return Container(
-      height: 80,
+      height: 60,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: KoeColorName.values.length,
         itemBuilder: (context, index) {
           return Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 12),
             child: _buildPaletteOption(KoeColorName.values[index], mainColor),
           );
         },
@@ -284,19 +345,19 @@ class SettingsPanel extends StatelessWidget {
       ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 60,
-        height: 60,
+        width: 45,
+        height: 45,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [colors['light']!, colors['main']!, colors['dark']!],
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(22.5),
           border: isSelected
               ? Border.all(
                   color: isDark ? Colors.white : Colors.black,
-                  width: 3,
+                  width: 2.5,
                 )
               : null,
         ),
@@ -304,9 +365,9 @@ class SettingsPanel extends StatelessWidget {
             ? Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(22.5),
                 ),
-                child: const Icon(Icons.check, color: Colors.white, size: 24),
+                child: const Icon(Icons.check, color: Colors.white, size: 18),
               )
             : null,
       ),
