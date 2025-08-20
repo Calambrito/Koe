@@ -4,6 +4,7 @@ import '../backend/admin.dart';
 import '../backend/song.dart';
 import '../backend/koe_palette.dart';
 import '../backend/theme.dart';
+import '../backend/audio_player_manager.dart';
 import '../widgets/nowplaying.dart';
 import '../widgets/admin_nav_tabs.dart';
 import '../widgets/settings_panel.dart';
@@ -63,7 +64,15 @@ class _AdminPortalState extends State<AdminPortal> {
     });
   }
 
-  void _logout() {
+  void _logout() async {
+    try {
+      // Stop and reset the audio player when logging out
+      final audioManager = AudioPlayerManager.instance;
+      await audioManager.reset();
+    } catch (e) {
+      print('Error stopping audio on logout: $e');
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),

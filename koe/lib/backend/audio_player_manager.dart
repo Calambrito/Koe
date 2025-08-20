@@ -74,6 +74,29 @@ class AudioPlayerManager {
     }
   }
 
+  Future<void> stop() async {
+    try {
+      print('AudioPlayerManager: Stopping playback');
+      await _player.stop();
+      print('AudioPlayerManager: Playback stopped successfully');
+    } catch (e) {
+      print('AudioPlayerManager: Error stopping playback: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> reset() async {
+    try {
+      print('AudioPlayerManager: Resetting player state');
+      await _player.stop();
+      currentSong = null;
+      print('AudioPlayerManager: Player state reset successfully');
+    } catch (e) {
+      print('AudioPlayerManager: Error resetting player state: $e');
+      rethrow;
+    }
+  }
+
   Future<void> dispose() async {
     await _player.dispose();
   }

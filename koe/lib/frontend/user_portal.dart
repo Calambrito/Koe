@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../backend/listener.dart' as klistener;
 import '../backend/theme.dart';
 import '../backend/koe_palette.dart';
+import '../backend/audio_player_manager.dart';
 import 'login_page.dart';
 import '../widgets/settings_panel.dart';
 import '../widgets/custom_nav_tabs.dart';
@@ -41,7 +42,15 @@ class _UserPortalState extends State<UserPortal> {
     });
   }
 
-  void _logout() {
+  void _logout() async {
+    try {
+      // Stop and reset the audio player when logging out
+      final audioManager = AudioPlayerManager.instance;
+      await audioManager.reset();
+    } catch (e) {
+      print('Error stopping audio on logout: $e');
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
