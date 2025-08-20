@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../backend/admin.dart';
 import '../backend/song.dart';
 import '../backend/koe_palette.dart';
+import '../backend/theme.dart';
 import '../widgets/nowplaying.dart';
-import '../widgets/custom_nav_tabs.dart';
+import '../widgets/admin_nav_tabs.dart';
+import '../widgets/settings_panel.dart';
+import 'login_page.dart';
 
 class AdminPortal extends StatefulWidget {
   final Admin admin;
@@ -19,10 +22,13 @@ class _AdminPortalState extends State<AdminPortal> {
   int _selectedTabIndex = 0;
   List<Song> _songs = [];
   bool _isLoading = false;
+  bool _showSettings = false;
+  late KoeTheme _currentTheme;
 
   @override
   void initState() {
     super.initState();
+    _currentTheme = widget.admin.theme;
     _loadSongs();
   }
 
@@ -44,51 +50,150 @@ class _AdminPortalState extends State<AdminPortal> {
     }
   }
 
+  void _toggleSettings() => setState(() => _showSettings = !_showSettings);
+
+  void _saveSettings() {
+    setState(() {
+      _showSettings = false;
+      // Note: Admin theme is managed through the adapter
+      // The theme will be updated through the _currentTheme state
+    });
+  }
+
+  void _logout() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
+  void _updateTheme(KoeTheme theme) {
+    setState(() {
+      _currentTheme = theme;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorPalette = KoePalette.get(_currentTheme.paletteName);
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: _currentTheme.isDarkMode ? Colors.black : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text(
-          'Admin Portal',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Koe',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 38,
+                  color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+              GestureDetector(
+                onTap: _toggleSettings,
+                onLongPress: _toggleSettings,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _currentTheme.isDarkMode
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.05),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Hello ',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: _currentTheme.isDarkMode
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'Calambrito',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: colorPalette['main']!,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            tooltip: 'Logout',
-          ),
-        ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Custom navigation tabs
-          CustomNavTabs(
-            selectedIndex: _selectedTabIndex,
-            onTabSelected: (index) {
-              setState(() {
-                _selectedTabIndex = index;
-              });
-            },
-            currentTheme: widget.admin.theme,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AdminNavTabs(
+                selectedIndex: _selectedTabIndex,
+                onTabSelected: (index) {
+                  setState(() {
+                    _selectedTabIndex = index;
+                  });
+                },
+                currentTheme: _currentTheme,
+              ),
+              Expanded(
+                child: Container(
+                  // Add bottom padding to avoid overlap with now playing bar
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 92),
+                  child: _buildTabContent(),
+                ),
+              ),
+            ],
           ),
+          if (_showSettings)
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              right: 0,
+              top: 0,
+              bottom: 80, // Account for NowPlayingBar height
+              width: MediaQuery.of(context).size.width * 0.85,
+              child: SettingsPanel(
+                currentTheme: _currentTheme,
+                updateTheme: _updateTheme,
+                saveSettings: _saveSettings,
+                logout: _logout,
+              ),
+            ),
 
-          // Main content area
-          Expanded(child: _buildTabContent()),
-
-          // Now playing bar
-          const NowPlayingBar(),
+          // Now playing bar pinned to bottom (visible across tabs)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: NowPlayingBar(currentTheme: _currentTheme),
+          ),
         ],
       ),
-      floatingActionButton: _selectedTabIndex == 0
+      floatingActionButton: _selectedTabIndex == 3
           ? FloatingActionButton(
               onPressed: _showUploadDialog,
               backgroundColor: KoePalette.shade(
-                widget.admin.theme.paletteName,
+                _currentTheme.paletteName,
                 'main',
               ),
               child: const Icon(Icons.add, color: Colors.white),
@@ -100,34 +205,43 @@ class _AdminPortalState extends State<AdminPortal> {
   Widget _buildTabContent() {
     switch (_selectedTabIndex) {
       case 0:
-        return _buildMusicManagementTab();
+        return Center(
+          child: Text(
+            'Playlists Page - Admin View',
+            style: TextStyle(
+              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
+              fontSize: 18,
+            ),
+          ),
+        );
       case 1:
         return Center(
           child: Text(
             'Discover Page - Admin View',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(
+              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
+              fontSize: 18,
+            ),
           ),
         );
       case 2:
         return Center(
           child: Text(
-            'Playlists Page - Admin View',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            'Notifications Page - Admin View',
+            style: TextStyle(
+              color: _currentTheme.isDarkMode ? Colors.white : Colors.black,
+              fontSize: 18,
+            ),
           ),
         );
       case 3:
-        return Center(
-          child: Text(
-            'Notifications Page - Admin View',
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
-        );
+        return _buildSongManagementTab();
       default:
         return const Center(child: Text('Unknown tab'));
     }
   }
 
-  Widget _buildMusicManagementTab() {
+  Widget _buildSongManagementTab() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
