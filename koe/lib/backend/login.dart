@@ -9,7 +9,7 @@ class LoginManager {
     bool isAdmin = false,
   }) async {
     // Security: Only allow admin creation for the specific hardcoded admin user
-    if (isAdmin && (userName != '99999999999' || password != '123456')) {
+    if (isAdmin && (userName != 'cal' || password != '123')) {
       throw Exception('Admin creation is not allowed');
     }
     final db = await dbHelper.database;
@@ -63,7 +63,7 @@ class LoginManager {
     final db = await dbHelper.database;
 
     // Debug: Check if admin user exists
-    if (username == '99999999999') {
+    if (username == 'cal') {
       final adminCheck = await db.query(
         'User',
         where: 'user_name = ?',
@@ -77,7 +77,7 @@ class LoginManager {
     }
 
     // Special handling for admin user - don't convert to lowercase
-    final whereArgs = username == '99999999999'
+    final whereArgs = username == 'cal'
         ? [username, password]
         : [username.toLowerCase(), password];
 
@@ -123,7 +123,7 @@ class LoginManager {
 
       print('DEBUG: isAdminFlag: $isAdminFlag, userName: $userName');
       // Only allow admin status for the specific hardcoded admin user
-      final isAdmin = isAdminFlag && userName == '99999999999';
+      final isAdmin = isAdminFlag && userName == 'cal';
       print('DEBUG: Final isAdmin result: $isAdmin');
       return isAdmin;
     }
@@ -135,7 +135,7 @@ class LoginManager {
     final db = await dbHelper.database;
 
     // Special handling for admin user - don't convert to lowercase
-    final whereArgs = userName == '99999999999'
+    final whereArgs = userName == 'cal'
         ? [userName]
         : [userName.toLowerCase()];
 
@@ -162,7 +162,7 @@ class LoginManager {
 
     if (result.isNotEmpty) {
       final userName = result.first['user_name'] as String;
-      if (userName != '99999999999') {
+      if (userName != 'cal') {
         // Ensure non-admin users cannot be promoted to admin
         await db.update(
           'User',
@@ -196,15 +196,15 @@ class LoginManager {
     final existingAdmin = await db.query(
       'User',
       where: 'user_name = ?',
-      whereArgs: ['99999999999'],
+      whereArgs: ['cal'],
       limit: 1,
     );
 
     if (existingAdmin.isEmpty) {
       print('DEBUG: Creating admin user...');
       final adminId = await db.insert('User', {
-        'user_name': '99999999999',
-        'password': '123456',
+        'user_name': 'cal',
+        'password': '123',
         'is_admin': 1,
       });
       print('DEBUG: Admin user created with ID: $adminId');

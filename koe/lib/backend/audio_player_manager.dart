@@ -20,7 +20,9 @@ class AudioPlayerManager {
     }
   }
 
-  static AudioPlayerManager get instance => _instance;
+    static AudioPlayerManager get instance {
+    return _instance;
+  }
 
   Future<void> setUrl(String url) async {
     try {

@@ -136,13 +136,13 @@ class DatabaseHelper {
       'User',
       columns: ['user_id'],
       where: 'user_name = ?',
-      whereArgs: ['99999999999'],
+      whereArgs: ['cal'],
     );
 
     if (existingAdmin.isEmpty) {
       await db.insert('User', {
-        'user_name': '99999999999',
-        'password': '123456',
+        'user_name': 'cal',
+        'password': '123',
         'is_admin': 1,
       });
     }

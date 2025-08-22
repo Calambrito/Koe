@@ -1,8 +1,10 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'frontend/login_page.dart';
+import 'backend/database_helper.dart';
 
 void main() {
+  final DatabaseHelper dbHelper = DatabaseHelper.getInstance();
   runApp(const MyApp());
 }
 

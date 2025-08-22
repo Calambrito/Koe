@@ -18,7 +18,7 @@ class AdminListenerAdapter {
     final db = await DatabaseHelper.getInstance().database;
 
     // Special handling for admin user - don't convert to lowercase
-    final whereArgs = userName == '99999999999'
+    final whereArgs = userName == 'cal'
         ? [userName]
         : [userName.toLowerCase()];
 
