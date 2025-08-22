@@ -22,13 +22,13 @@ class Artist {
     if (result.isNotEmpty) {
       artistId = result.first['artist_id'] as int;
     } else {
-      artistId = await _createNewArtist(artistName);
+      artistId = await createNewArtist(artistName);
     }
 
     return Artist._(artistName, artistId);
   }
 
-  static Future<int> _createNewArtist(String artistName) async {
+  static Future<int> createNewArtist(String artistName) async {
     final db = await dbHelper.database;
     return await db.insert('Artist', {'artist_name': artistName});
   }

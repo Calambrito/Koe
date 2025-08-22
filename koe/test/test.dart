@@ -3,15 +3,15 @@ import 'package:koe/backend/song.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  // Initialize sqflite FFI for pure Dart tests
+  // Initializing sqflite FFI for pure Dart tests
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
   group('Song DB Workflow Regression Tests', () {
-    late dynamic db;
+    late dynamic db; // Placeholder for the in-memory database used in all tests.
 
     setUp(() async {
-      // Open in-memory database
+      // Creates an in-memory database
       db = await databaseFactory.openDatabase(inMemoryDatabasePath);
 
       // Create Songs table
@@ -28,12 +28,12 @@ void main() {
       ''');
     });
 
-    tearDown(() async {
+    tearDown(() async {  //Closes the database 
       await db.close();
     });
 
     test('Insert and retrieve a song', () async {
-      // Arrange
+      // Create a Song object.
       final song = Song(
         songId: 1,
         songName: 'Test Song',
@@ -44,13 +44,13 @@ void main() {
         artistName: 'Test Artist',
       );
 
-      // Act
-      await db.insert('Songs', song.toMap());
+      
+      await db.insert('Songs', song.toMap()); // Convert the Song object to a map (toMap()).
       final results = await db.query('Songs', where: 'song_id = ?', whereArgs: [1]);
 
-      // Assert
-      expect(results.length, 1);
-      final fetchedSong = Song.fromMap(results.first);
+      
+      expect(results.length, 1); //checks that exactly one row exists meaning insert operation worked
+      final fetchedSong = Song.fromMap(results.first); //recreates a Song object from the database row
       expect(fetchedSong.songId, song.songId);
       expect(fetchedSong.songName, song.songName);
       expect(fetchedSong.artistName, song.artistName);
